@@ -56,10 +56,8 @@ class EscapePrinter {
     }
     async printPuzzle(puzzle) {
         try {
-            if (!await this.isConnected()) {
-                console.warn("Printer not connected. Skipping print job.");
-                return false;
-            }
+            // Skipped strict connection check to accommodate Windows Shared Printers
+            // if (!await this.isConnected()) { ... }
 
             this.printer.clear();
             this.printer.alignCenter();
@@ -118,7 +116,7 @@ class EscapePrinter {
     }
 
     async printCustom(text) {
-        if (!await this.isConnected()) return false;
+        // if (!await this.isConnected()) return false;
         try {
             this.printer.clear();
             this.printer.alignCenter();
