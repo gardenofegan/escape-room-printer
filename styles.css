@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+:root {
+    --terminal-green: #00ff00;
+    --terminal-bg: #000000;
+    --terminal-glow: 0 0 10px rgba(0, 255, 0, 0.7);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--terminal-bg);
+    color: var(--terminal-green);
+    font-family: 'VT323', monospace;
+    font-size: 24px;
+    height: 100vh;
+    overflow: hidden;
+    cursor: none; /* Hide cursor for immersion */
+}
+
+.terminal {
+    padding: 2rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    text-shadow: 0 0 5px var(--terminal-green); 
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--terminal-green);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    font-size: 1.5rem;
+}
+
+.log-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow-y: auto;
+}
+
+.log-entry {
+    margin-bottom: 0.5rem;
+}
+
+.blinking-cursor {
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Scrollbar styling for terminal look */
+::-webkit-scrollbar {
+    width: 10px;
+}
+::-webkit-scrollbar-track {
+    background: #001100; 
+}
+::-webkit-scrollbar-thumb {
+    background: var(--terminal-green); 
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #55ff55; 
+}

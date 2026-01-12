@@ -1,0 +1,19 @@
+{
+  "name": "escape-room-receipt-printer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^39.2.7"
+  },
+  "dependencies": {
+    "node-thermal-printer": "^4.5.0"
+  }
+}

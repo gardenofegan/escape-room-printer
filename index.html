@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPERATION RECEIPT</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="terminal">
+        <div class="header">
+            <span class="system-status">SYSTEM ONLINE</span>
+            <span class="timer" id="timer">00:00:00</span>
+        </div>
+        <div class="log-container" id="log-container">
+            <div class="log-entry">> CONNECTING TO WOPR...</div>
+            <div class="log-entry">> UPLINK ESTABLISHED.</div>
+            <div class="log-entry">> WAITING FOR INPUT...</div>
+            <div class="log-entry blinking-cursor">_</div>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>
