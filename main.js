@@ -1,6 +1,7 @@
 const { app, BrowserWindow, globalShortcut, ipcMain } = require('electron');
 const path = require('path');
 const escapePrinter = require('./printer');
+const gameManager = require('./game-manager');
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -24,6 +25,16 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+
+  // Initialize Game Manager
+  gameManager.init();
+
+  // Handle puzzle code submission
+  ipcMain.handle('submit-code', async (event, code) => {
+    console.log(`Received code submission: ${code}`);
+    const result = await gameManager.submitAnswer(code);
+    return result;
+  });
 
   // Listen for test print request
   ipcMain.handle('test-print', async (event) => {

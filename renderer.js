@@ -1,75 +1,128 @@
 console.log("Renderer loaded");
 
 const logContainer = document.getElementById('log-container');
+let inputBuffer = '';
+let isScannerInput = false;
+let lastKeyTime = Date.now();
+let inputTimer = null;
+let isLocked = false; // Prevent input while system is typing
 
-function addLog(text) {
-    const entry = document.createElement('div');
-    entry.className = 'log-entry';
-    entry.textContent = text;
-    logContainer.appendChild(entry);
+// Thresholds
+const SCANNER_CHAR_INTERVAL = 60;
+const SUBMIT_WAIT_TIME = 500;
+
+// Initial Prompt
+createInputLine();
+
+function createInputLine() {
+    const line = document.createElement('div');
+    line.className = 'log-entry input-line';
+    line.innerHTML = '> <span id="current-input" class="input-content"></span><span id="cursor" class="cursor blinking"></span>';
+    logContainer.appendChild(line);
+    scrollToBottom();
+}
+
+function updateInputDisplay() {
+    const inputSpan = document.getElementById('current-input');
+    if (inputSpan) {
+        inputSpan.textContent = inputBuffer;
+    }
+    scrollToBottom();
+}
+
+function lockInput() {
+    isLocked = true;
+    const cursor = document.getElementById('cursor');
+    if (cursor) cursor.remove(); // Remove cursor from completed line
+
+    // Remove ID from the finished input line so the new one is unique
+    const inputSpan = document.getElementById('current-input');
+    if (inputSpan) inputSpan.removeAttribute('id');
+}
+
+function scrollToBottom() {
     logContainer.scrollTop = logContainer.scrollHeight;
 }
 
-let inputBuffer = '';
-let lastKeyTime = Date.now();
-let inputTimer = null;
-let isScannerInput = false;
+async function typeWriter(text, className = 'system-msg', speed = 30) {
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${className}`;
+    logContainer.appendChild(entry);
 
-// Thresholds
-const SCANNER_CHAR_INTERVAL = 60; // ms: Scanners are super fast, manual typing is usually > 100ms
-const SUBMIT_WAIT_TIME = 500; // ms: Wait time before auto-submitting scan
+    // Split by characters but keep simple for now
+    for (let i = 0; i < text.length; i++) {
+        entry.textContent += text.charAt(i);
+        scrollToBottom();
+        // Random variance for realism
+        await new Promise(r => setTimeout(r, speed + Math.random() * 20));
+    }
+}
 
-// Global Key Selection Listener
+async function addSeparator() {
+    const sep = document.createElement('div');
+    sep.className = 'log-entry separator';
+    sep.textContent = '----------------------------------------';
+    logContainer.appendChild(sep);
+    scrollToBottom();
+    await new Promise(r => setTimeout(r, 100));
+}
+
+// Global Listener
 window.addEventListener('keydown', async (e) => {
-    const currentTime = Date.now();
-    const timeDiff = currentTime - lastKeyTime;
+    if (isLocked) return;
 
-    // 1. Special Command Handling (Ctrl+P)
-    // CTRL+P for print test
+    // CTRL+P Handling
     if (e.ctrlKey && e.key.toLowerCase() === 'p') {
-        addLog('> INITIALIZING PRINT SEQUENCE...');
+        lockInput();
+        await typeWriter("INITIALIZING DIAGNOSTIC PRINT...", "system-msg");
         try {
             const success = await window.api.testPrint();
-            addLog(success ? '> PRINT SUCCESSFUL.' : '> PRINT FAILED. CHECK CONNECTION.');
+            await typeWriter(success ? "PRINT SUCCESSFUL." : "PRINT FAILED.", success ? "system-msg" : "error-msg");
         } catch (err) {
             console.error(err);
         }
-        return; // Don't add to buffer
+        await addSeparator();
+        inputBuffer = "";
+        createInputLine();
+        isLocked = false;
+        return;
     }
 
-    // 2. Quit handling (let the main process handle Ctrl+Q via globalShortcut, but we ignore it here)
     if (e.ctrlKey || e.altKey || e.metaKey) return;
 
-    // 3. Scanner / Input Handling
+    const currentTime = Date.now();
+    const timeDiff = currentTime - lastKeyTime;
 
-    // Clear any pending submission timer
+    // Scanner Logic
     if (inputTimer) clearTimeout(inputTimer);
 
     if (e.key === 'Enter') {
         if (inputBuffer.length > 0) {
-            addLog(`> ACCESS CODE RECEIVED (MANUAL): ${inputBuffer}`);
-            processInput(inputBuffer);
+            lockInput();
+            processInput(inputBuffer, isScannerInput);
             inputBuffer = '';
             isScannerInput = false;
         }
+    } else if (e.key === 'Backspace') {
+        inputBuffer = inputBuffer.slice(0, -1);
+        updateInputDisplay();
     } else if (e.key.length === 1) {
-        // Detect scanner speed (very fast bursts)
+        // Scanner Detection
         if (inputBuffer.length > 0 && timeDiff < SCANNER_CHAR_INTERVAL) {
             isScannerInput = true;
         } else if (inputBuffer.length === 0) {
-            // Reset flag on new input start
             isScannerInput = false;
         }
 
-        // Only append printable characters
         inputBuffer += e.key;
+        updateInputDisplay();
 
-        // If it looks like a scan, set a timer to auto-submit
+        // Auto-submit scan
         if (isScannerInput) {
             inputTimer = setTimeout(() => {
-                if (inputBuffer.length > 0) {
-                    addLog(`> ACCESS CODE RECEIVED (AUTO): ${inputBuffer}`);
-                    processInput(inputBuffer);
+                if (inputBuffer.length > 0 && !isLocked) { // Check locked again
+                    lockInput();
+                    processInput(inputBuffer, true);
                     inputBuffer = '';
                     isScannerInput = false;
                 }
@@ -80,7 +133,42 @@ window.addEventListener('keydown', async (e) => {
     lastKeyTime = currentTime;
 });
 
-function processInput(code) {
-    // Placeholder for Phase 4: Game Logic
-    console.log("Processing code:", code);
+async function processInput(code, isScan) {
+    isLocked = true;
+
+    // Visual pause before processing
+    await new Promise(r => setTimeout(r, 300));
+
+    if (isScan) {
+        await typeWriter("SCAN DETECTED. PROCESSING...", "scanned-msg", 10);
+    } else {
+        await typeWriter("VALIDATING INPUT...", "system-msg", 20);
+    }
+
+    try {
+        const result = await window.api.submitCode(code);
+
+        if (result.success) {
+            await typeWriter(`ACCESS GRANTED: ${result.message}`, "system-msg", 30);
+        } else {
+            await typeWriter(`ACCESS DENIED: ${result.message}`, "error-msg", 30);
+        }
+
+        if (result.gameComplete) {
+            await addSeparator();
+            await typeWriter("SESSION COMPLETE.", "system-msg");
+        } else {
+            // Prepare for next input
+            await addSeparator();
+            createInputLine();
+            isLocked = false;
+        }
+
+    } catch (err) {
+        console.error("Submission Error:", err);
+        await typeWriter("COMMUNICATION ERROR.", "error-msg");
+        await addSeparator();
+        createInputLine();
+        isLocked = false;
+    }
 }

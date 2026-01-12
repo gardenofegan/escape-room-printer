@@ -17,5 +17,6 @@ contextBridge.exposeInMainWorld('api', {
             ipcRenderer.on(channel, (event, ...args) => func(...args));
         }
     },
-    testPrint: () => ipcRenderer.invoke('test-print')
+    testPrint: () => ipcRenderer.invoke('test-print'),
+    submitCode: (code) => ipcRenderer.invoke('submit-code', code)
 });

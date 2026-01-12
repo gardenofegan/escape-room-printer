@@ -3,7 +3,9 @@
 :root {
     --terminal-green: #00ff00;
     --terminal-bg: #000000;
-    --terminal-glow: 0 0 10px rgba(0, 255, 0, 0.7);
+    --terminal-dim: #004400;
+    --alert-red: #ff0000;
+    --terminal-yellow: #ffff00;
 }
 
 * {
@@ -19,7 +21,7 @@ body {
     font-size: 24px;
     height: 100vh;
     overflow: hidden;
-    cursor: none; /* Hide cursor for immersion */
+    cursor: none;
 }
 
 .terminal {
@@ -27,50 +29,104 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
-    text-shadow: 0 0 5px var(--terminal-green); 
 }
 
+/* HEADER */
 .header {
     display: flex;
     justify-content: space-between;
-    border-bottom: 2px solid var(--terminal-green);
-    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--terminal-dim);
+    padding-bottom: 0.5rem;
     margin-bottom: 1rem;
     text-transform: uppercase;
     font-size: 1.5rem;
+    flex-shrink: 0;
 }
 
+/* LOG CONTAINER (Fills space, scrollable) */
 .log-container {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     overflow-y: auto;
+    font-size: 1.5rem;
+    /* Larger text for readability */
+    padding-bottom: 2rem;
 }
 
 .log-entry {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.2rem;
+    line-height: 1.4;
+    word-break: break-word;
 }
 
-.blinking-cursor {
+/* Message Types */
+.system-msg {
+    color: var(--terminal-green);
+}
+
+.input-line {
+    color: var(--terminal-green);
+    display: flex;
+    align-items: center;
+}
+
+.input-content {
+    color: #fff;
+    /* User input in white for contrast */
+}
+
+.error-msg {
+    color: var(--alert-red);
+    text-shadow: 0 0 5px var(--alert-red);
+}
+
+.separator {
+    color: var(--terminal-dim);
+    margin: 1rem 0;
+    font-size: 1rem;
+}
+
+.scanned-msg {
+    color: var(--terminal-yellow);
+}
+
+/* Cursor & Blinking */
+.cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.2em;
+    background-color: var(--terminal-green);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+}
+
+.blinking {
     animation: blink 1s step-end infinite;
 }
 
 @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
 }
 
-/* Scrollbar styling for terminal look */
+/* Scrollbar */
 ::-webkit-scrollbar {
     width: 10px;
 }
+
 ::-webkit-scrollbar-track {
-    background: #001100; 
+    background: #000;
 }
+
 ::-webkit-scrollbar-thumb {
-    background: var(--terminal-green); 
-}
-::-webkit-scrollbar-thumb:hover {
-    background: #55ff55; 
+    background: var(--terminal-dim);
 }
