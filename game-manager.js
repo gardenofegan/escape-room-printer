@@ -111,7 +111,8 @@ class GameManager {
                     success: true,
                     message: "SYSTEM INITIALIZED. MISSION START.",
                     stage: this.currentStage,
-                    nextPuzzleType: nextPuzzle.type
+                    nextPuzzleType: nextPuzzle.type,
+                    startTime: this.startTime
                 };
             }
         }
@@ -127,7 +128,8 @@ class GameManager {
                     success: true,
                     message: "ACCESS GRANTED. UPLOADING NEXT DATA PACKET...",
                     stage: this.currentStage,
-                    nextPuzzleType: nextPuzzle.type
+                    nextPuzzleType: nextPuzzle.type,
+                    startTime: this.startTime
                 };
             } else {
                 // Game Over / Win
