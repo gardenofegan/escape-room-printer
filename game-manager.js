@@ -1,6 +1,7 @@
 const escapePrinter = require('./printer');
 const puzzleGenerator = require('./puzzle-generator');
 const receiptRenderer = require('./receipt-renderer');
+const configManager = require('./config-manager');
 
 class GameManager {
     constructor() {
@@ -65,7 +66,7 @@ class GameManager {
                 missionName: puzzle.printLabel,
                 clueText: puzzle.clueText,
                 timeElapsed: this.getElapsedTime(),
-                teamName: "TEAM ALPHA", // TODO: Config
+                teamName: configManager.get('teamName'), // Use config
                 barcodeImage: barcode,
                 mazeData: mazeData,
                 mazeWidth: mazeData ? mazeData.mazeWidth : 0,

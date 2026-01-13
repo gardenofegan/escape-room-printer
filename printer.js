@@ -1,10 +1,15 @@
-const { ThermalPrinter, PrinterTypes, CharacterSet, BreakLine } = require('node-thermal-printer');
+const ThermalPrinter = require("node-thermal-printer").printer;
+const PrinterTypes = require("node-thermal-printer").types;
+const CharacterSet = require("node-thermal-printer").CharacterSet;
+const configManager = require('./config-manager');
+const fs = require('fs');
 
 class EscapePrinter {
     constructor() {
         this.printer = new ThermalPrinter({
             type: PrinterTypes.EPSON,
-            interface: '//localhost/escape_printer', // Windows shared printer syntax
+            interface: configManager.get('printerName'), // Use config
+            driver: require("node-thermal-printer").driver,
             characterSet: CharacterSet.PC437_USA,
             removeSpecialCharacters: false,
             lineCharacter: "=",
@@ -13,6 +18,18 @@ class EscapePrinter {
                 timeout: 5000
             }
         });
+        this.isConnected = false;
+        this.init();
+    }
+
+    async init() {
+        try {
+            this.isConnected = await this.printer.isPrinterConnected();
+            console.log(`Printer Initialized. Connection Status: ${this.isConnected}`);
+        } catch (err) {
+            console.error("Printer Initialization Failed:", err);
+            this.isConnected = false;
+        }
     }
 
     async isConnected() {

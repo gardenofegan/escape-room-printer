@@ -5,18 +5,32 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.gardenofegan.escapereceipt",
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "extraResources": [
+      "assets/**",
+      "templates/**",
+      "config.json"
+    ]
   },
   "keywords": [],
-  "author": "",
+  "author": "Garden of Egan",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^39.2.7"
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1"
   },
   "dependencies": {
-    "bwip-js": "^4.8.0",
+    "bwip-js": "^3.0.4",
     "handlebars": "^4.7.8",
-    "node-html-to-image": "^5.0.0",
-    "node-thermal-printer": "^4.5.0"
+    "node-html-to-image": "^3.2.4",
+    "node-thermal-printer": "^4.1.2"
   }
 }
