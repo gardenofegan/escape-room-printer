@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        body {
+            width: 512px;
+            /* Reduced from 576px to fit standard printable area */
+            box-sizing: border-box;
+            margin: 0;
+            /* Remove auto margins to avoid screenshotting whitespace */
+            padding: 10px;
+            /* Reduced padding */
+            background: white;
+            color: black;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Center flex children */
+        }
+
+        h1 {
+            font-size: 24px;
+            text-transform: uppercase;
+            border-bottom: 3px solid black;
+            padding-bottom: 10px;
+            width: 100%;
+        }
+
+        .content {
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        .puzzle-visual {
+            margin: 20px auto;
+            /* Grid Gap for "smaller boxes" look */
+            gap: 2px;
+            border: 2px solid black;
+            background: black;
+            /* Border color between cells if gap implies background showing through? No, wait. */
+            background-color: white;
+            padding: 5px;
+        }
+
+        /* Individual cells */
+        .maze-cell {
+            width: 20px;
+            height: 20px;
+        }
+
+
+        .footer {
+            margin-top: 30px;
+            border-top: 2px dashed black;
+            padding-top: 10px;
+        }
+
+        .barcode {
+            margin-top: 10px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>MISSION: {{missionName}}</h1>
+
+    <div class="content">
+        {{{clueText}}}
+    </div>
+
+    {{#if mazeData}}
+    <div class="puzzle-visual"
+        style="display: grid; grid-template-columns: repeat({{mazeWidth}}, 1fr); width: fit-content;">
+        {{#each mazeCells}}
+        <div class="maze-cell" style="background: {{this}};"></div>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    <div class="footer">
+        <div>TIME ELAPSED: {{timeElapsed}}</div>
+        <div>TEAM: {{teamName}}</div>
+        {{#if barcodeImage}}
+        <img class="barcode" src="{{barcodeImage}}" />
+        {{/if}}
+        <div style="font-size: 12px; margin-top: 5px;">SCAN CODE TO SUBMIT</div>
+    </div>
+</body>
+
+</html>

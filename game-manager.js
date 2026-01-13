@@ -1,4 +1,6 @@
 const escapePrinter = require('./printer');
+const puzzleGenerator = require('./puzzle-generator');
+const receiptRenderer = require('./receipt-renderer');
 
 class GameManager {
     constructor() {
@@ -16,18 +18,17 @@ class GameManager {
                 id: "stage_1_maze",
                 type: "maze",
                 answerCode: "1234",
-                imagePath: "assets/puzzles/maze_01.png", // Placeholder
+                // imagePath removed, using dynamic generation
                 clueText: "FOLLOW THE PATH. ESCAPE THE GRID.",
                 printLabel: "PUZZLE_01"
             },
             {
-                id: "stage_2_text",
-                type: "text",
-                answerCode: "7777",
-                clueText: "WHAT HAS KEYS BUT CANNOT OPEN LOCKS?\n\n[ P _ _ N _ ]",
-                printLabel: "RIDDLE_02"
+                id: "stage_procedural_maze",
+                type: "maze",
+                answerCode: "MAZE_SOLVED", // In a real app, this would be dynamic
+                clueText: "NAVIGATE THE NETWORK LAYERS.",
+                printLabel: "FIREWALL BREACH"
             }
-            // Add more puzzles here (crossword, logic, etc.)
         ];
     }
 
@@ -43,6 +44,45 @@ class GameManager {
             return this.puzzles[this.currentStage];
         }
         return null;
+    }
+
+    async deliverPuzzle(puzzle) {
+        try {
+            // 1. Generate Assets (Barcodes, Mazes)
+            const barcode = await puzzleGenerator.generateBarcode(puzzle.answerCode);
+            let mazeData = null;
+
+            if (puzzle.type === 'maze') {
+                const maze = puzzleGenerator.generateMaze(20, 20);
+                mazeData = {
+                    mazeWidth: maze.width,
+                    mazeCells: maze.cells
+                };
+            }
+
+            // 2. Render Receipt Image
+            const imageBuffer = await receiptRenderer.renderReceipt({
+                missionName: puzzle.printLabel,
+                clueText: puzzle.clueText,
+                timeElapsed: this.getElapsedTime(),
+                teamName: "TEAM ALPHA", // TODO: Config
+                barcodeImage: barcode,
+                mazeData: mazeData,
+                mazeWidth: mazeData ? mazeData.mazeWidth : 0,
+                mazeCells: mazeData ? mazeData.mazeCells : []
+            });
+
+            // 3. Attach Buffer to Puzzle Object for Printer
+            puzzle.imageBuffer = imageBuffer;
+            puzzle.type = 'image'; // Force printer to treat as image
+
+            await escapePrinter.printPuzzle(puzzle);
+
+        } catch (err) {
+            console.error("Dynamic Generation Failed:", err);
+            // Fallback to text
+            await escapePrinter.printCustom("ERROR GENERATING ASSETS.\nSEE CONSOLE.");
+        }
     }
 
     async submitAnswer(code) {
@@ -66,7 +106,7 @@ class GameManager {
             // Print the first actual puzzle (Stage 1)
             const nextPuzzle = this.getCurrentPuzzle();
             if (nextPuzzle) {
-                await escapePrinter.printPuzzle(nextPuzzle);
+                await this.deliverPuzzle(nextPuzzle);
                 return {
                     success: true,
                     message: "SYSTEM INITIALIZED. MISSION START.",
@@ -82,10 +122,7 @@ class GameManager {
             const nextPuzzle = this.getCurrentPuzzle();
 
             if (nextPuzzle) {
-                // Determine how to handle the next puzzle
-                // The printer module will handle the specifics of 'type'
-                await escapePrinter.printPuzzle(nextPuzzle);
-
+                await this.deliverPuzzle(nextPuzzle);
                 return {
                     success: true,
                     message: "ACCESS GRANTED. UPLOADING NEXT DATA PACKET...",

@@ -72,21 +72,28 @@ class EscapePrinter {
             this.printer.newLine();
 
             // Dynamic Content Handling based on Type
-            // EXPAND HERE for new puzzle types (crossword, logic, etc.)
             switch (puzzle.type) {
                 case 'maze':
                 case 'image':
-                    if (puzzle.imagePath) {
+                    // Check if we have a pre-rendered buffer (Phase 5)
+                    if (puzzle.imageBuffer) {
                         try {
-                            // Requires full absolute path usually, or relative to cwd
-                            // Depending on how final build works, might need path.join(__dirname, ...)
+                            await this.printer.printImageBuffer(puzzle.imageBuffer);
+                        } catch (bufErr) {
+                            console.error("Failed to print image buffer:", bufErr);
+                            this.printer.println("[DATA STREAM CORRUPTED]");
+                        }
+                    }
+                    // Fallback to file path (Legacy Phase 4)
+                    else if (puzzle.imagePath) {
+                        try {
                             await this.printer.printImage(puzzle.imagePath);
                         } catch (imgErr) {
                             console.error("Failed to load image:", imgErr);
                             this.printer.println("[IMAGE DATA CORRUPTED]");
                         }
                     }
-                    // For mazes, we might also want instruction text below/above
+
                     if (puzzle.clueText) {
                         this.printer.newLine();
                         this.printer.println(puzzle.clueText);
@@ -95,7 +102,6 @@ class EscapePrinter {
 
                 case 'text':
                 default:
-                    // Default behavior for text or unknown types
                     this.printer.setTextQuadArea();
                     if (puzzle.clueText) {
                         this.printer.println(puzzle.clueText);

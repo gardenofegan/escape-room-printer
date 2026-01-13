@@ -14,6 +14,9 @@
     "electron": "^39.2.7"
   },
   "dependencies": {
+    "bwip-js": "^4.8.0",
+    "handlebars": "^4.7.8",
+    "node-html-to-image": "^5.0.0",
     "node-thermal-printer": "^4.5.0"
   }
 }
