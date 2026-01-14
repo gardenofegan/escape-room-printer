@@ -5,12 +5,10 @@
     <style>
         body {
             width: 512px;
-            /* Reduced from 576px to fit standard printable area */
+            /* Fit standard printable area */
             box-sizing: border-box;
             margin: 0;
-            /* Remove auto margins to avoid screenshotting whitespace */
             padding: 10px;
-            /* Reduced padding */
             background: white;
             color: black;
             font-family: 'Courier New', monospace;
@@ -18,7 +16,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Center flex children */
         }
 
         h1 {
@@ -38,21 +35,35 @@
 
         .puzzle-visual {
             margin: 20px auto;
-            /* Grid Gap for "smaller boxes" look */
             gap: 2px;
-            border: 2px solid black;
+            border: 4px solid black;
+            /* Moved from inline style */
             background: black;
-            /* Border color between cells if gap implies background showing through? No, wait. */
             background-color: white;
             padding: 5px;
+            display: grid;
+            width: fit-content;
+            /* Default to 10 if var not set */
+            grid-template-columns: repeat(var(--maze-width, 10), 1fr);
         }
 
-        /* Individual cells */
         .maze-cell {
             width: 20px;
             height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: black;
         }
 
+        .maze-cell.wall {
+            background: black;
+        }
+
+        .maze-cell.path {
+            background: white;
+        }
 
         .footer {
             margin-top: 30px;
@@ -66,6 +77,49 @@
             margin-left: auto;
             margin-right: auto;
         }
+
+        /* FOLDING PUZZLE STYLES */
+        .folding-container {
+            width: 100%;
+            margin: 40px auto;
+            border: 2px dashed black;
+            /* The fold line */
+            position: relative;
+            height: 100px;
+            /* Space for the fold */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fold-half {
+            font-size: 80px;
+            font-weight: 900;
+            line-height: 80px;
+            letter-spacing: 10px;
+            position: absolute;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .fold-top {
+            top: -40px;
+            /* Position above fold line */
+            height: 40px;
+            /* Show only top half */
+            border-bottom: 0px solid transparent;
+        }
+
+        .fold-bottom {
+            bottom: -40px;
+            /* Position below fold line */
+            height: 40px;
+            /* Show only bottom half */
+            display: flex;
+            align-items: flex-end;
+            /* Align text to bottom of container so cropping works from top */
+            justify-content: center;
+        }
     </style>
 </head>
 
@@ -77,11 +131,27 @@
     </div>
 
     {{#if mazeData}}
-    <div class="puzzle-visual"
-        style="display: grid; grid-template-columns: repeat({{mazeWidth}}, 1fr); width: fit-content;">
-        {{#each mazeCells}}
-        <div class="maze-cell" style="background: {{this}};"></div>
+    <div class="puzzle-visual" style="--maze-width: {{mazeData.width}};">
+        {{#each mazeData.cells}}
+        <div class="maze-cell {{this.type}}">
+            {{this.char}}
+        </div>
         {{/each}}
+    </div>
+    {{/if}}
+
+    {{#if foldingData}}
+    <div style="margin: 20px 0; font-size: 14px;">--- FOLD ALONG DOTTED LINE ---</div>
+    <div class="folding-container">
+        <!-- Top Half of Text -->
+        <div class="fold-half fold-top">
+            <div style="transform: translateY(0px);">{{foldingData.code}}</div>
+        </div>
+
+        <!-- Bottom Half of Text -->
+        <div class="fold-half fold-bottom">
+            <div style="transform: translateY(-40px);">{{foldingData.code}}</div>
+        </div>
     </div>
     {{/if}}
 

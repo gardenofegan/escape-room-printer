@@ -20,15 +20,32 @@ config.json: Defines theme-specific strings (e.g., "Scanning Uplink..." vs. "Tra
 
 Verification: The Electron main.js reads a master settings.json and injects the chosen theme's CSS into the window on load.
 
-🧩 2. The Dynamic Puzzle EngineWe will implement a "Component" system for puzzles, allowing you to generate receipts dynamically using HTML/Canvas.
+🧩 2. The Dynamic Puzzle Engine
+We will implement a "Component" system for puzzles, allowing you to generate receipts dynamically using HTML/Canvas.
 
 Step 2.1: Puzzle Registry & Type Factory
 
-Action: Create a PuzzleFactory.js that maps "Puzzle Types" to "Generator Functions."Implementation Logic:Vertical Maze: Uses a seed to generate a 576px wide canvas-based maze with letter overlays.Folding Puzzle: Generates SVG shapes that only align when the paper is folded.Micro-Text: Renders a word search where the secret key is set to font-size: 4px.
+Action: Create a PuzzleFactory.js that maps "Puzzle Types" to "Generator Functions."
+
+Implementation Logic:
+
+Vertical Maze: Uses a seed to generate a 576px wide canvas-based maze with letter overlays.
+
+Folding Puzzle: Generates SVG shapes that only align when the paper is folded.
+
+Micro-Text: Renders a word search where the secret key is set to font-size: 4px.
 
 Verification: A test script can call PuzzleFactory.create('MAZE', {difficulty: 5}) and return a printable buffer.
 
-Step 2.2: Receipt Content LayoutAction: Every receipt must now follow a standard 3-section layout:Header: Task ID Barcode (for the UI to identify the active puzzle).Body: The generated puzzle content (Maze, Cipher, Art).Footer: Small hint or "Mission Status" text.
+Step 2.2: Receipt Content Layout
+
+Action: Every receipt must now follow a standard 3-section layout:
+
+Header: Task ID Barcode (for the UI to identify the active puzzle).
+
+Body: The generated puzzle content (Maze, Cipher, Art).
+
+Footer: Small hint or "Mission Status" text.
 
 Verification: Scanning the Header Barcode updates the laptop screen to say: "Task #04 Active. Awaiting Input..."
 

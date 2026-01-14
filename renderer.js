@@ -249,6 +249,11 @@ async function processInput(code, isScan) {
                 playSound('print');
                 await typeWriter(">>> INTIATING HARDCOPY OUTPUT <<<", "system-msg");
             }
+        } else if (result.isTaskScan) {
+            playSound('type'); // Or a partial success sound
+            await typeWriter(`>> ${result.message}`, "scanned-msg", 20);
+            // Maybe clear buffer visually to indicate ready for input? 
+            // Currently it just separates.
         } else {
             playSound('error');
             await typeWriter(`ACCESS DENIED: ${result.message}`, "error-msg", 30);

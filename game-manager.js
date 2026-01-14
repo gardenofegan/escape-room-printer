@@ -1,5 +1,5 @@
 const escapePrinter = require('./printer');
-const puzzleGenerator = require('./puzzle-generator');
+const puzzleFactory = require('./puzzle-factory');
 const receiptRenderer = require('./receipt-renderer');
 const configManager = require('./config-manager');
 
@@ -10,25 +10,27 @@ class GameManager {
         this.puzzles = [
             {
                 id: "stage_0_onboarding",
-                type: "text",
-                answerCode: "START",
+                taskId: "START_MSN", // The barcode content
+                type: "TEXT",
+                answerCode: "START", // Manual override or scan start? Let's assume START can be scanned or typed.
                 clueText: "SYSTEM INITIALIZATION REQUIRED.\nSCAN 'START' BARCODE TO BEGIN.",
                 printLabel: "INIT_SEQ_01"
             },
             {
                 id: "stage_1_maze",
-                type: "maze",
+                taskId: "TSK-01-MZ",
+                type: "MAZE_VERTICAL",
                 answerCode: "1234",
-                // imagePath removed, using dynamic generation
-                clueText: "FOLLOW THE PATH. ESCAPE THE GRID.",
-                printLabel: "PUZZLE_01"
+                clueText: "FOLLOW THE WHITE RABBIT (PATH).",
+                printLabel: "LAYER 1 ACCESS"
             },
             {
-                id: "stage_procedural_maze",
-                type: "maze",
-                answerCode: "MAZE_SOLVED", // In a real app, this would be dynamic
-                clueText: "NAVIGATE THE NETWORK LAYERS.",
-                printLabel: "FIREWALL BREACH"
+                id: "stage_2_fold",
+                taskId: "TSK-02-FLD",
+                type: "FOLDING",
+                answerCode: "5829",
+                clueText: "ALIGN THE SIGNALS.\nFOLD REALITY TO SEE THE TRUTH.",
+                printLabel: "SIGNAL FRAGMENTATION"
             }
         ];
     }
@@ -50,15 +52,15 @@ class GameManager {
     async deliverPuzzle(puzzle) {
         try {
             // 1. Generate Assets (Barcodes, Mazes)
-            const barcode = await puzzleGenerator.generateBarcode(puzzle.answerCode);
+            // Use taskId for the barcode so scanning it identifies the task, but doesn't solve it.
+            const barcode = await puzzleFactory.generateBarcode(puzzle.taskId);
             let mazeData = null;
 
-            if (puzzle.type === 'maze') {
-                const maze = puzzleGenerator.generateMaze(20, 20);
-                mazeData = {
-                    mazeWidth: maze.width,
-                    mazeCells: maze.cells
-                };
+            if (puzzle.type === 'MAZE_VERTICAL') {
+                const mazeResult = await puzzleFactory.generate('MAZE_VERTICAL', {
+                    answer: puzzle.answerCode
+                });
+                mazeData = mazeResult.mazeData;
             }
 
             // 2. Render Receipt Image
@@ -69,8 +71,8 @@ class GameManager {
                 teamName: configManager.get('teamName'), // Use config
                 barcodeImage: barcode,
                 mazeData: mazeData,
-                mazeWidth: mazeData ? mazeData.mazeWidth : 0,
-                mazeCells: mazeData ? mazeData.mazeCells : []
+                // Redundant explicit props removed or fixed if template needed them? 
+                // Template uses mazeData.width/cells directly now.
             });
 
             // 3. Attach Buffer to Puzzle Object for Printer
@@ -98,24 +100,36 @@ class GameManager {
             };
         }
 
-        // Check if game hasn't started yet and they scanned START
-        if (this.currentStage === 0 && normalizedCode === 'START') {
-            this.startTime = Date.now();
-            this.currentStage++;
-            console.log("Game Started!");
+        // Check if game hasn't started yet
+        if (this.currentStage === 0) {
+            // Allow START scan or type
+            if (normalizedCode === 'START' || normalizedCode === puzzle.taskId) {
+                this.startTime = Date.now();
+                this.currentStage++;
+                console.log("Game Started!");
 
-            // Print the first actual puzzle (Stage 1)
-            const nextPuzzle = this.getCurrentPuzzle();
-            if (nextPuzzle) {
-                await this.deliverPuzzle(nextPuzzle);
-                return {
-                    success: true,
-                    message: "SYSTEM INITIALIZED. MISSION START.",
-                    stage: this.currentStage,
-                    nextPuzzleType: nextPuzzle.type,
-                    startTime: this.startTime
-                };
+                // Print the first actual puzzle (Stage 1)
+                const nextPuzzle = this.getCurrentPuzzle();
+                if (nextPuzzle) {
+                    await this.deliverPuzzle(nextPuzzle);
+                    return {
+                        success: true,
+                        message: "SYSTEM INITIALIZED. MISSION START.",
+                        stage: this.currentStage,
+                        nextPuzzleType: nextPuzzle.type,
+                        startTime: this.startTime
+                    };
+                }
             }
+        }
+
+        // Check for Task ID Scan (Confirms user is on right receipt)
+        if (normalizedCode === puzzle.taskId) {
+            return {
+                success: false, // Not a solve, but a confirmation
+                isTaskScan: true,
+                message: "TASK IDENTIFIED. ENTER SECURITY KEY.",
+            };
         }
 
         // Standard answer check
