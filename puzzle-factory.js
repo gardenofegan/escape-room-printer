@@ -76,8 +76,16 @@ class PuzzleFactory {
                 break; // Found one
             }
         }
-        // Force connection if needed? (Usually backtracker fills well, but let's ensure)
-        // Actually, just pick a valid random end point on the last valid row
+
+        // --- VISUAL START/END INDICATORS ---
+        // Open the top wall for "Start"
+        grid[index(startX, 0)].type = 'path';
+        grid[index(startX, 0)].char = '↓';
+
+        // Open the bottom wall for "End"
+        grid[index(exitX, height - 1)].type = 'path';
+        grid[index(exitX, height - 1)].char = '↓';
+        // -----------------------------------
 
         // 4. Solve Maze (BFS to find shortest path to embed Answer)
         // We need a path from Top(1,1) to some Bottom point
