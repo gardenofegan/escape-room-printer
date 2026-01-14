@@ -124,25 +124,56 @@ class PuzzleFactory {
         const answer = (config.answer || "SECRET").toUpperCase();
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
+        // Create a set of solution path indices for fast lookup
+        const solutionIndices = new Set();
+        solutionPath.forEach(p => solutionIndices.add(index(p.x, p.y)));
+
         // Place answer along the solution path
         if (solutionPath.length > 0) {
-            // Distribute answer chars evenly along path
-            // e.g. path=50 steps, answer=4 chars. Step size ~ 12.
-            const step = Math.floor(solutionPath.length / (answer.length + 1));
+            // We want to distribute the answer characters evenly along the path.
+            // We have solutionPath.length steps. We need to place answer.length chars.
+            // We'll place the first char at step 0 (or slight offset) and the last near the end.
 
-            let charIndex = 0;
-            for (let i = step; i < solutionPath.length && charIndex < answer.length; i += step) {
-                const p = solutionPath[i];
-                grid[index(p.x, p.y)].char = answer[charIndex];
-                grid[index(p.x, p.y)].isSolution = true; // Marker for debugging if needed
-                charIndex++;
+            // To ensure even spacing:
+            // segmentLength = pathLength / (answerLength)
+            // But we prefer to center it or just spread it out. 
+            // Let's use simple interpolation indices.
+
+            for (let i = 0; i < answer.length; i++) {
+                // Calculate the target index in the path array
+                // e.g. length=10, answer=3 (indices 0,1,2).
+                // i=0 -> 0*9/2 = 0
+                // i=1 -> 1*9/2 = 4.5 -> 4 or 5
+                // i=2 -> 2*9/2 = 9
+                // Use a slight margin to avoid right at start/end if possible, or just exact math.
+
+                // Let's try to pad start/end slightly if there's room
+                const usableLength = solutionPath.length;
+                const pathIndex = Math.floor(i * (usableLength - 1) / (answer.length - 1 || 1));
+
+                // If answer has 1 char, it goes at index 0 (or middle if we wanted). 
+                // The formula above puts it at 0. Let's handle 1 char case gracefully? 
+                // Using (answer.length - 1 || 1) handles length=1 -> divides by 1 -> index=0.
+
+                const p = solutionPath[pathIndex];
+                if (p) {
+                    grid[index(p.x, p.y)].char = answer[i];
+                    grid[index(p.x, p.y)].isSolution = true;
+                }
             }
         }
 
         // Fill other random path slots with decoys
         for (let i = 0; i < grid.length; i++) {
+            // Only place decoy if it's a path, AND it helps to verify it has no char yet
             if (grid[i].type === 'path' && !grid[i].char) {
-                if (Math.random() < 0.15) { // 15% chance of random char
+                // CRITICAL: Ensure we do NOT place noise on the solution path
+                // The solutionPath cells that didn't get an answer char should remain EMPTY.
+                if (solutionIndices.has(i)) {
+                    continue; // Skip solution path cells
+                }
+
+                if (Math.random() < 0.05) { // REDUCED to 5% chance (was 15%)
                     grid[i].char = chars[Math.floor(Math.random() * chars.length)];
                 }
             }
