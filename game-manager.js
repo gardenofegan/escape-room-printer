@@ -31,6 +31,22 @@ class GameManager {
                 answerCode: "5829",
                 clueText: "ALIGN THE SIGNALS.\nFOLD REALITY TO SEE THE TRUTH.",
                 printLabel: "SIGNAL FRAGMENTATION"
+            },
+            {
+                id: "stage_3_sound",
+                taskId: "TSK-03-SND",
+                type: "SOUND_WAVE",
+                answerCode: "440", // Frequency or code triggered by it
+                clueText: "SIGNAL INTERCEPTED.\nSCAN TASK TO ANALYZE FREQUENCY.\nENTER HERTZ VALUE.",
+                printLabel: "AUDIO ANALYSIS"
+            },
+            {
+                id: "stage_4_cipher",
+                taskId: "TSK-04-CPH",
+                type: "CIPHER",
+                answerCode: "ENIGMA",
+                clueText: "ENCRYPTED MESSAGE RECEIVED.\nDECODE TO PROCEED.",
+                printLabel: "CRYPTOGRAPHY DEPT"
             }
         ];
     }
@@ -55,12 +71,26 @@ class GameManager {
             // Use taskId for the barcode so scanning it identifies the task, but doesn't solve it.
             const barcode = await puzzleFactory.generateBarcode(puzzle.taskId);
             let mazeData = null;
+            let foldingData = null;
+            let soundData = null;
+            let cipherData = null;
 
             if (puzzle.type === 'MAZE_VERTICAL') {
-                const mazeResult = await puzzleFactory.generate('MAZE_VERTICAL', {
-                    answer: puzzle.answerCode
-                });
-                mazeData = mazeResult.mazeData;
+                const res = await puzzleFactory.generate('MAZE_VERTICAL', { answer: puzzle.answerCode });
+                mazeData = res.mazeData;
+            } else if (puzzle.type === 'FOLDING') {
+                const res = await puzzleFactory.generate('FOLDING', { code: puzzle.answerCode });
+                foldingData = res.foldingData;
+            } else if (puzzle.type === 'SOUND_WAVE') {
+                // If answer is "440", let's use that as frequency
+                const freq = parseInt(puzzle.answerCode) || 440;
+                const res = await puzzleFactory.generate('SOUND_WAVE', { frequency: freq });
+                soundData = res.soundData;
+                // Store frequency in puzzle object for scan retrieval?
+                puzzle.metadata = { frequency: freq, type: 'SOUND_WAVE' };
+            } else if (puzzle.type === 'CIPHER') {
+                const res = await puzzleFactory.generate('CIPHER', { text: puzzle.answerCode });
+                cipherData = res.cipherData;
             }
 
             // 2. Render Receipt Image
@@ -71,8 +101,9 @@ class GameManager {
                 teamName: configManager.get('teamName'), // Use config
                 barcodeImage: barcode,
                 mazeData: mazeData,
-                // Redundant explicit props removed or fixed if template needed them? 
-                // Template uses mazeData.width/cells directly now.
+                foldingData: foldingData,
+                soundData: soundData,
+                cipherData: cipherData
             });
 
             // 3. Attach Buffer to Puzzle Object for Printer
@@ -94,10 +125,40 @@ class GameManager {
 
         const puzzle = this.getCurrentPuzzle();
         if (!puzzle) {
+            // Even if no active puzzle, check for debug prints
+            const debugPuzzle = this.puzzles.find(p => p.taskId === normalizedCode || p.id === normalizedCode);
+            if (debugPuzzle) {
+                await this.deliverPuzzle(debugPuzzle);
+                return {
+                    success: false,
+                    isTaskScan: true,
+                    message: "TEST MODE: PRINTING ASSET..."
+                };
+            }
             return {
                 success: false,
                 message: "NO ACTIVE PUZZLE. SYSTEM STANDBY."
             };
+        }
+
+        // DEBUG/TEST: Check if input matches ANY puzzle ID/TaskID to force print
+        const testPuzzle = this.puzzles.find(p => p.taskId === normalizedCode || p.id === normalizedCode);
+        if (testPuzzle && (testPuzzle.id !== puzzle.id || normalizedCode === testPuzzle.id)) {
+            // Only trigger if it's explicitly a DIFFERENT puzzle 
+            // OR if we used the internal ID (which isn't usually the barcode)
+            // But wait, the user wants to print the specific receipt.
+            // If I scan TSK-01, and I am on TSK-01, normal logic handles it (Task Identified).
+            // If I scan TSK-03, and I am on TSK-01, I want to print TSK-03.
+
+            if (testPuzzle.id !== puzzle.id) {
+                console.log(`Debug Print Request: ${testPuzzle.id}`);
+                await this.deliverPuzzle(testPuzzle);
+                return {
+                    success: false,
+                    isTaskScan: true, // Reuse this to show blue message
+                    message: `TEST MODE: GENERATING ${testPuzzle.taskId}...`
+                };
+            }
         }
 
         // Check if game hasn't started yet
@@ -128,7 +189,8 @@ class GameManager {
             return {
                 success: false, // Not a solve, but a confirmation
                 isTaskScan: true,
-                message: "TASK IDENTIFIED. ENTER SECURITY KEY.",
+                message: "TASK IDENTIFIED. AWAITING SOLUTION.",
+                metadata: puzzle.metadata // Pass metadata (freq) if any
             };
         }
 

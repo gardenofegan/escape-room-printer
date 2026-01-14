@@ -5,6 +5,8 @@ class PuzzleFactory {
         this.generators = {
             'MAZE_VERTICAL': this.generateVerticalMaze.bind(this),
             'FOLDING': this.generateFoldingPuzzle.bind(this),
+            'SOUND_WAVE': this.generateSoundWavePuzzle.bind(this),
+            'CIPHER': this.generateCipherPuzzle.bind(this),
             'TEXT': this.generateTextPuzzle.bind(this)
         };
     }
@@ -205,6 +207,71 @@ class PuzzleFactory {
             type: 'FOLDING',
             foldingData: {
                 code // The template will render this twice with different crop/masks
+            }
+        };
+    }
+
+    async generateSoundWavePuzzle(config) {
+        // Generates a visual waveform representation.
+        // In a real app, this might match the audio frequency data.
+        // Here we generate random bars to look scientific.
+
+        const bars = [];
+        const count = 40;
+        for (let i = 0; i < count; i++) {
+            // Generate a noisy sine wave look
+            const val = Math.sin(i * 0.5) * 0.5 + 0.5; // 0-1 base
+            const noise = (Math.random() - 0.5) * 0.4;
+            let height = Math.max(0.1, Math.min(1.0, val + noise));
+            bars.push(Math.floor(height * 100)); // 0-100%
+        }
+
+        return {
+            type: 'SOUND_WAVE',
+            soundData: {
+                bars,
+                frequency: config.frequency || 440, // Logic for renderer to play
+                pattern: config.pattern || "loop"
+            }
+        };
+    }
+
+    async generateCipherPuzzle(config) {
+        // Substitution Cipher
+        // Maps A-Z to arbitrary symbols or other logic
+        const text = (config.text || "SECRET").toUpperCase();
+
+        // Simple shift or symbol map
+        // Let's use a "Symbol Map" approach assuming we have a font or unicode support.
+        // For standard printer receipt, standard chars are safer. 
+        // Let's do a shift cipher (Caesar) or mixed alphabet for now, 
+        // OR return a "Symbol Grid" if we want to get fancy with drawing.
+
+        // Let's stick to "Mixed Alphabet" using standard chars for safety on thermal printers,
+        // unless we render as image (which we do!). Since we render to image, we can use unicode!
+
+        // Mapping: A->Δ, B->O, C->□, etc.
+        const symbols = "ΔO□◊∇⬠⬡✚✖✦★✶✸✹✺✻✼✽✾✿❀❁❂❃❄❅"; // 26ish symbols
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        let ciphertext = "";
+        for (let char of text) {
+            const idx = alphabet.indexOf(char);
+            if (idx !== -1 && idx < symbols.length) {
+                ciphertext += symbols[idx];
+            } else {
+                ciphertext += char; // Numbers/Spaces unchanged
+            }
+        }
+
+        return {
+            type: 'CIPHER',
+            cipherData: {
+                ciphertext,
+                // Maybe provide a key at the bottom?
+                // Or maybe the user has to "Hack" it (Brute force? Or previous clues?)
+                // Let's provide a partial key.
+                partialKey: "A=Δ, E=∇, T=✦"
             }
         };
     }

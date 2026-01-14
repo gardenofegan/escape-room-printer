@@ -222,6 +222,44 @@ window.addEventListener('keydown', async (e) => {
     lastKeyTime = currentTime;
 });
 
+let activeOscillator = null;
+
+function playTone(freq, type = 'sine') {
+    if (activeOscillator) {
+        activeOscillator.stop();
+        activeOscillator = null;
+    }
+
+    // Create new oscillator
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = type;
+    osc.frequency.value = freq;
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+
+    // Fade in/out to avoid popping
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
+
+    activeOscillator = osc;
+    activeOscillator.gainNode = gain;
+}
+
+function stopTone() {
+    if (activeOscillator) {
+        const gain = activeOscillator.gainNode;
+        gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        activeOscillator.stop(audioCtx.currentTime + 0.5);
+        activeOscillator = null;
+    }
+}
+
 async function processInput(code, isScan) {
     isLocked = true;
 
@@ -242,6 +280,7 @@ async function processInput(code, isScan) {
         }
 
         if (result.success) {
+            stopTone(); // Stop any looping audio if active
             playSound('success');
             await typeWriter(`ACCESS GRANTED: ${result.message}`, "system-msg", 30);
             if (result.nextPuzzleType) {
@@ -252,6 +291,15 @@ async function processInput(code, isScan) {
         } else if (result.isTaskScan) {
             playSound('type'); // Or a partial success sound
             await typeWriter(`>> ${result.message}`, "scanned-msg", 20);
+
+            // Check for Audio Puzzle Trigger
+            if (result.metadata && result.metadata.type === 'SOUND_WAVE' && result.metadata.frequency) {
+                await typeWriter(">> DETECTING AUDIO SIGNAL...", "system-msg");
+                await new Promise(r => setTimeout(r, 500));
+                playTone(result.metadata.frequency);
+                await typeWriter(">> SIGNAL LOCKED.", "system-msg");
+            }
+
             // Maybe clear buffer visually to indicate ready for input? 
             // Currently it just separates.
         } else {

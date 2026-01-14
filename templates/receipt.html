@@ -158,6 +158,28 @@
     </div>
     {{/if}}
 
+    {{#if soundData}}
+    <div class="sound-wave-container"
+        style="display:flex; justify-content:center; align-items:flex-end; height:60px; gap:2px; margin: 20px 0;">
+        {{#each soundData.bars}}
+        <div style="width:6px; background:black; height:{{this}}%;"></div>
+        {{/each}}
+    </div>
+    <div style="font-size:12px;">AUDIO SPECTRUM ANALYSIS</div>
+    {{/if}}
+
+    {{#if cipherData}}
+    <div class="cipher-container"
+        style="margin: 20px; font-size: 24px; letter-spacing: 2px; border: 2px solid black; padding: 10px;">
+        {{cipherData.ciphertext}}
+    </div>
+    {{#if cipherData.partialKey}}
+    <div style="font-size: 14px; margin-top: 10px; font-style: italic;">
+        DECRYPTION KEY FRAGMENT: {{cipherData.partialKey}}
+    </div>
+    {{/if}}
+    {{/if}}
+
     <div class="footer">
         <div>TIME ELAPSED: {{timeElapsed}}</div>
         <div>TEAM: {{teamName}}</div>
