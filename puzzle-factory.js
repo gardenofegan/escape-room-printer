@@ -88,7 +88,7 @@ class PuzzleFactory {
         // -----------------------------------
 
         // 4. Solve Maze (BFS to find shortest path to embed Answer)
-        // We need a path from Top(1,1) to some Bottom point
+        // We need a path from Top(1,1) to the specific Exit(exitX, height-2)
         const endY = height - 2;
         // Find reachable bottom cells
         // Simple BFS from Start
@@ -102,9 +102,11 @@ class PuzzleFactory {
             const { x, y, path } = queue.shift();
             const currentPath = [...path, { x, y }];
 
-            if (y === endY) {
+            // FIXED: Must target the specific exitX we chose, otherwise we might pick a different dead-end path 
+            // that happens to reach the bottom row, and protect THAT path instead of the visual one.
+            if (y === endY && x === exitX) {
                 solutionPath = currentPath;
-                break; // Found one path to bottom
+                break; // Found correct path to bottom exit
             }
 
             const dirs = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }];
@@ -173,7 +175,7 @@ class PuzzleFactory {
                     continue; // Skip solution path cells
                 }
 
-                if (Math.random() < 0.05) { // REDUCED to 5% chance (was 15%)
+                if (Math.random() < 0.12) { // Increased noise back to 12% as requested (more noise elsewhere)
                     grid[i].char = chars[Math.floor(Math.random() * chars.length)];
                 }
             }

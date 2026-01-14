@@ -1,7 +1,7 @@
 const PuzzleFactory = require('./puzzle-factory');
 
 async function run() {
-    const answerText = "ESCAPE";
+    const answerText = "X7B9K2M4L1";
     const maze = await PuzzleFactory.generateVerticalMaze({ answer: answerText });
     const { width, height, cells } = maze.mazeData;
     const index = (x, y) => y * width + x;

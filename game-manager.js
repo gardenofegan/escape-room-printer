@@ -20,8 +20,8 @@ class GameManager {
                 id: "stage_1_maze",
                 taskId: "TSK-01-MZ",
                 type: "MAZE_VERTICAL",
-                answerCode: "1234",
-                clueText: "FOLLOW THE WHITE RABBIT (PATH).",
+                answerCode: "X7B9K2M4L1",
+                clueText: "FOLLOW THE PATH TO UNLOCK.",
                 printLabel: "LAYER 1 ACCESS"
             },
             {
