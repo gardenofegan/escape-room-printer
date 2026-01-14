@@ -1,0 +1,170 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+:root {
+    --terminal-green: #00ff00;
+    --terminal-bg: #000000;
+    --terminal-dim: #004400;
+    --alert-red: #ff0000;
+    --terminal-yellow: #ffff00;
+    --text-glow: 0 0 5px var(--terminal-green);
+    --crt-line-color: rgba(0, 0, 0, 0.2);
+    --font-main: 'VT323', monospace;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--terminal-bg);
+    color: var(--terminal-green);
+    font-family: var(--font-main);
+    font-size: 24px;
+    height: 100vh;
+    overflow: hidden;
+    cursor: none;
+    text-shadow: var(--text-glow);
+    /* Phosphor Glow */
+}
+
+/* CRT Scanline Overlay */
+body::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(to bottom,
+            var(--crt-line-color) 50%,
+            rgba(0, 0, 0, 0) 50%);
+    background-size: 100% 4px;
+    /* Scanline spacing */
+    z-index: 100;
+    pointer-events: none;
+    /* Let clicks pass through */
+    opacity: 0.7;
+}
+
+.terminal {
+    padding: 2rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--terminal-dim);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.timer {
+    color: var(--alert-red);
+    text-shadow: 0 0 5px var(--alert-red);
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+/* LOG CONTAINER (Fills space, scrollable) */
+.log-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow-y: auto;
+    font-size: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+.log-entry {
+    margin-bottom: 0.2rem;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+/* Message Types */
+.system-msg {
+    color: var(--terminal-green);
+}
+
+.input-line {
+    color: var(--terminal-green);
+    display: flex;
+    align-items: center;
+}
+
+.input-content {
+    color: #fff;
+    /* User input in white for contrast */
+    text-shadow: 0 0 5px #fff;
+}
+
+.error-msg {
+    color: var(--alert-red);
+    text-shadow: 0 0 5px var(--alert-red);
+}
+
+.separator {
+    color: var(--terminal-dim);
+    margin: 1rem 0;
+    font-size: 1rem;
+    text-shadow: none;
+    /* No glow for dim lines */
+}
+
+.scanned-msg {
+    color: var(--terminal-yellow);
+    text-shadow: 0 0 5px var(--terminal-yellow);
+}
+
+/* Cursor & Blinking */
+.cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.2em;
+    background-color: var(--terminal-green);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    box-shadow: var(--text-glow);
+}
+
+.blinking {
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--terminal-dim);
+}

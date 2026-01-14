@@ -2,6 +2,7 @@ const { app, BrowserWindow, globalShortcut, ipcMain } = require('electron');
 const path = require('path');
 const escapePrinter = require('./printer');
 const gameManager = require('./game-manager');
+const configManager = require('./config-manager');
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -41,6 +42,24 @@ app.whenReady().then(() => {
     console.log("Received test-print request");
     const result = await escapePrinter.testPrint();
     return result;
+  });
+
+  // Handle get theme request
+  ipcMain.handle('get-theme', async (event) => {
+    const themeName = configManager.get('currentTheme') || 'matrix';
+    const themeConfigPath = path.join(__dirname, 'themes', themeName, 'config.json');
+    const fs = require('fs');
+
+    let themeConfig = {};
+    if (fs.existsSync(themeConfigPath)) {
+      themeConfig = JSON.parse(fs.readFileSync(themeConfigPath, 'utf8'));
+    }
+
+    return {
+      name: themeName,
+      path: `themes/${themeName}/style.css`,
+      config: themeConfig
+    };
   });
 
   // Register a global shortcut to quit the application (Ctrl+Q or Command+Q)

@@ -28,6 +28,32 @@ const sounds = {
 // Pre-load/Volume Adjust
 Object.values(sounds).forEach(s => s.volume = 0.5);
 
+async function initTheme() {
+    try {
+        const theme = await window.api.getTheme();
+        console.log("Loading theme:", theme.name);
+
+        // Inject CSS
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = theme.path;
+        document.head.appendChild(link);
+
+        // Update Title if available
+        if (theme.config.gameTitle) {
+            document.title = theme.config.gameTitle;
+            const header = document.querySelector('.header div:first-child');
+            if (header) header.textContent = theme.config.gameTitle;
+        }
+
+        // Return config for use elsewhere
+        return theme.config;
+    } catch (err) {
+        console.error("Theme Load Error:", err);
+        return { startupText: ["SYSTEM DEFAULT LOADED."] };
+    }
+}
+
 function playSound(name) {
     if (sounds[name]) {
         // Clone for overlapping sounds (esp typing)
@@ -43,8 +69,19 @@ function playSound(name) {
 }
 
 // Initial Prompt
-createInputLine();
-startTimer(); // Initialize timer display
+initTheme().then(async (themeConfig) => {
+    createInputLine();
+    startTimer(); // Initialize timer display
+
+    // Play startup sequence
+    if (themeConfig.startupText && Array.isArray(themeConfig.startupText)) {
+        for (const line of themeConfig.startupText) {
+            await typeWriter(line, "system-msg");
+            await new Promise(r => setTimeout(r, 500));
+        }
+        await addSeparator();
+    }
+});
 
 function startTimer() {
     // Clear existing if any

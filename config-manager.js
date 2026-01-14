@@ -52,6 +52,11 @@ class ConfigManager {
     get(key) {
         return this.config[key] !== undefined ? this.config[key] : this.getDefaults()[key];
     }
+
+    getThemePath() {
+        const theme = this.config.currentTheme || 'matrix';
+        return path.join('themes', theme);
+    }
 }
 
 module.exports = new ConfigManager();

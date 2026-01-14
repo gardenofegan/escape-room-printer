@@ -1,0 +1,9 @@
+{
+    "startupText": [
+        "ESTABLISHING SECURE CONNECTION...",
+        "ENCRYPTING DATA STREAM...",
+        "ACCESS GRANTED."
+    ],
+    "gameTitle": "OPERATIONAL TERMINAL",
+    "promptSymbol": ">"
+}

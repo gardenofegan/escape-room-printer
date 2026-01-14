@@ -3,5 +3,6 @@
     "teamName": "TEAM ALPHA",
     "timerEnabled": true,
     "audioVolume": 0.5,
-    "debugMode": false
+    "debugMode": false,
+    "currentTheme": "matrix"
 }

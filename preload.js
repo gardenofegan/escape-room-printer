@@ -18,5 +18,6 @@ contextBridge.exposeInMainWorld('api', {
         }
     },
     testPrint: () => ipcRenderer.invoke('test-print'),
-    submitCode: (code) => ipcRenderer.invoke('submit-code', code)
+    submitCode: (code) => ipcRenderer.invoke('submit-code', code),
+    getTheme: () => ipcRenderer.invoke('get-theme')
 });
