@@ -7,6 +7,13 @@ class ReceiptRenderer {
     constructor() {
         this.templatePath = path.join(__dirname, 'templates', 'receipt.html');
         this.templateSource = fs.readFileSync(this.templatePath, 'utf8');
+        this.templateSource = fs.readFileSync(this.templatePath, 'utf8');
+
+        // Register helpers
+        handlebars.registerHelper('eq', function (a, b) {
+            return a === b;
+        });
+
         this.template = handlebars.compile(this.templateSource);
     }
 

@@ -238,41 +238,155 @@ class PuzzleFactory {
 
     async generateCipherPuzzle(config) {
         // Substitution Cipher
-        // Maps A-Z to arbitrary symbols or other logic
+        // config.variant: 'CAESAR' (default), 'PIGPEN', 'ICON'
+        const variant = config.variant || 'CAESAR';
         const text = (config.text || "SECRET").toUpperCase();
 
-        // Simple shift or symbol map
-        // Let's use a "Symbol Map" approach assuming we have a font or unicode support.
-        // For standard printer receipt, standard chars are safer. 
-        // Let's do a shift cipher (Caesar) or mixed alphabet for now, 
-        // OR return a "Symbol Grid" if we want to get fancy with drawing.
+        let cipherData = {
+            variant: variant,
+            text: text, // Original text for reference or fallback
+            partialKey: ""
+        };
 
-        // Let's stick to "Mixed Alphabet" using standard chars for safety on thermal printers,
-        // unless we render as image (which we do!). Since we render to image, we can use unicode!
-
-        // Mapping: A->Δ, B->O, C->□, etc.
-        const symbols = "ΔO□◊∇⬠⬡✚✖✦★✶✸✹✺✻✼✽✾✿❀❁❂❃❄❅"; // 26ish symbols
         const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-        let ciphertext = "";
-        for (let char of text) {
-            const idx = alphabet.indexOf(char);
-            if (idx !== -1 && idx < symbols.length) {
-                ciphertext += symbols[idx];
-            } else {
-                ciphertext += char; // Numbers/Spaces unchanged
+        if (variant === 'PIGPEN') {
+            // https://en.wikipedia.org/wiki/Pigpen_cipher
+            // Grid 1: A-I (Grid)
+            // Grid 2: J-R (Grid + Dot)
+            // Grid 3: S-V (X)
+            // Grid 4: W-Z (X + Dot)
+
+            // Mapping Logic:
+            // A: rb, B: lrb, C: lb ...
+            // Let's define classes manually for A-Z
+            const pigpenMap = {
+                'A': 'pp-border-rb',
+                'B': 'pp-border-lr pp-border-b', // U shape? No, U is l-b-r. Standard # is |__|, |_|, |__|
+                // Standard Pigpen:
+                // A B C
+                // D E F
+                // G H I
+                'A': 'pp-border-rb', 'B': 'pp-border-lr pp-border-b', 'C': 'pp-border-lb',
+                'D': 'pp-border-tb pp-border-r', 'E': 'pp-border-all', 'F': 'pp-border-tb pp-border-l',
+                'G': 'pp-border-rt', 'H': 'pp-border-lr pp-border-t', 'I': 'pp-border-lt',
+                // J-R (Same as above but with Dot)
+                'J': 'pp-border-rb pigpen-dot', 'K': 'pp-border-lr pp-border-b pigpen-dot', 'L': 'pp-border-lb pigpen-dot',
+                'M': 'pp-border-tb pp-border-r pigpen-dot', 'N': 'pp-border-all pigpen-dot', 'O': 'pp-border-tb pp-border-l pigpen-dot',
+                'P': 'pp-border-rt pigpen-dot', 'Q': 'pp-border-lr pp-border-t pigpen-dot', 'R': 'pp-border-lt pigpen-dot',
+                // X Shape: S T U V
+                //   S   
+                // T   U
+                //   V
+                // Wait, standard X is:
+                // S \ / T
+                //    X
+                // U / \ V  <- This isn't quite right ascii.
+                // Upper V: S, Right <: T, Left >: U, Lower ^: V
+
+                // Let's simplified rotation:
+                // S (Top V): border-r + border-b on rotated? No.
+                // Let's just use specific class names we will handle in CSS or simply borders.
+                // Actually easier:
+                // S: V shape (bottom-right + bottom-left border on 45deg?) 
+                // Let's assume we use 'pp-rotate' and set borders.
+                // A box rotated 45deg:
+                // Right+Bottom borders = "V" pointing down? No, that's ">" pointing right-down?
+                // Let's just hardcode classes and fix CSS if needed.
+                // S (Top): V shape opening UP.
+                'S': 'pp-rotate pp-border-rb', // Rotated 45deg, Right+Bottom -> V pointing DOWN? 
+                // If box is [] rotated 45 -> <>
+                // Right border is / (bottom right), Bottom border is \ (bottom left). 
+                // Together they form V pointing DOWN. So that's S? 
+                // Standard: S is Top triangle. V shape opening UP? 
+                // Actually, usually:
+                //  S
+                // T U
+                //  V
+                // S is the top quadrant. V shape.
+
+                // Let's use generic names and Map correctly:
+                'S': 'pp-rotate pp-border-rb', // V shape
+                'T': 'pp-rotate pp-border-lb', // < shape
+                'U': 'pp-rotate pp-border-rt', // > shape
+                'V': 'pp-rotate pp-border-lt', // ^ shape
+
+                // W-Z (Same + Dot)
+                'W': 'pp-rotate pp-border-rb pigpen-dot',
+                'X': 'pp-rotate pp-border-lb pigpen-dot',
+                'Y': 'pp-rotate pp-border-rt pigpen-dot',
+                'Z': 'pp-rotate pp-border-lt pigpen-dot'
+            };
+
+            // Re-map B,D,F,H correctly.
+            // B is |_| shape? No, B is Bottom-Center. U shape.
+            // A B C
+            // D E F  --> B is surrounded by A(left) C(right) E(bottom). 
+            // So B has Left, Right, Bottom borders? 
+            // My previous map: 'B': 'pp-border-lr pp-border-b' -> Left+Right+Bottom. Correct (U shape).
+            // D: Left Center. Top+Bottom+Right. 'D': 'pp-border-tb pp-border-r'. Correct.
+            // F: Right Center. Top+Bottom+Left. 'F': 'pp-border-tb pp-border-l'. Correct.
+            // H: Top Center. Left+Right+Top. 'H': 'pp-border-lr pp-border-t'. Correct.
+            // E: Center. All borders. Correct.
+
+            const symbols = [];
+            for (let char of text) {
+                if (pigpenMap[char]) {
+                    symbols.push({ type: 'pigpen', class: pigpenMap[char], char: char });
+                } else {
+                    symbols.push({ type: 'text', char: char }); // Spaces, numbers
+                }
             }
+            cipherData.symbols = symbols;
+            cipherData.partialKey = "LOOK FOR THE PATTERNS";
+            cipherData.visualKey = true; // Signals template to render the cheat sheet
+
+        } else if (variant === 'ICON') {
+            // Font Awesome Mapping (Example set)
+            const iconMap = {
+                'A': 'fa-solid fa-anchor', 'B': 'fa-solid fa-bicycle', 'C': 'fa-solid fa-cloud',
+                'D': 'fa-solid fa-diamond', 'E': 'fa-solid fa-eye', 'F': 'fa-solid fa-feather',
+                'G': 'fa-solid fa-ghost', 'H': 'fa-solid fa-heart', 'I': 'fa-solid fa-ice-cream',
+                'J': 'fa-solid fa-jet-fighter', 'K': 'fa-solid fa-key', 'L': 'fa-solid fa-leaf',
+                'M': 'fa-solid fa-moon', 'N': 'fa-solid fa-music', 'O': 'fa-solid fa-otter', // Otter? Maybe Circle?
+                'P': 'fa-solid fa-paw', 'Q': 'fa-solid fa-question', 'R': 'fa-solid fa-rocket',
+                'S': 'fa-solid fa-star', 'T': 'fa-solid fa-tree', 'U': 'fa-solid fa-umbrella',
+                'V': 'fa-solid fa-volcano', 'W': 'fa-solid fa-water', 'X': 'fa-solid fa-xmarks-lines',
+                'Y': 'fa-solid fa-yin-yang', 'Z': 'fa-solid fa-bolt' // Z uses Bolt (Zap)
+            };
+
+            const symbols = [];
+            for (let char of text) {
+                if (iconMap[char]) {
+                    symbols.push({ type: 'icon', class: iconMap[char], char: char });
+                } else {
+                    symbols.push({ type: 'text', char: char });
+                }
+            }
+            cipherData.symbols = symbols;
+            cipherData.partialKey = "A=ANCHOR, B=BIKE...";
+
+        } else {
+            // CAESAR (Default)
+            // Shift +3
+            const shift = 3;
+            let ciphertext = "";
+            for (let char of text) {
+                const idx = alphabet.indexOf(char);
+                if (idx !== -1) {
+                    const newIdx = (idx + shift) % 26;
+                    ciphertext += alphabet[newIdx];
+                } else {
+                    ciphertext += char;
+                }
+            }
+            cipherData.ciphertext = ciphertext;
+            cipherData.partialKey = `SHIFT +${shift}`;
         }
 
         return {
             type: 'CIPHER',
-            cipherData: {
-                ciphertext,
-                // Maybe provide a key at the bottom?
-                // Or maybe the user has to "Hack" it (Brute force? Or previous clues?)
-                // Let's provide a partial key.
-                partialKey: "A=Δ, E=∇, T=✦"
-            }
+            cipherData: cipherData
         };
     }
 
