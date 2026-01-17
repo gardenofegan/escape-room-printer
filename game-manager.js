@@ -56,21 +56,39 @@ class GameManager {
         this.puzzles = [];
         this.totalPuzzles = count;
 
-        const puzzleTypes = ['MAZE_VERTICAL', 'FOLDING', 'SOUND_WAVE', 'CIPHER'];
+        const puzzleTypes = ['MAZE_VERTICAL', 'FOLDING', 'SOUND_WAVE', 'CIPHER', 'ASCII'];
         const cipherVariants = ['PIGPEN', 'CAESAR', 'ICON'];
 
         for (let i = 0; i < count; i++) {
             const type = puzzleTypes[Math.floor(Math.random() * puzzleTypes.length)];
-            const answerCode = this.generateRandomCode();
+            // ASCII gets properly named answer later or we handle it here.
+            // Actually, ASCII puzzle generator defines its own answer (e.g. KEY).
+            // But generateRandomGame sets `answerCode` on the puzzle object.
+            // The factory returns `asciiData.answer` which we should use.
+            // However, we call factory *at delivery time*.
+            // So we need to pre-determine the answer now if we want to print it as the solution?
+            // OR we let the factory pick a random one, but that means `gameManager.answerCode` won't match.
+            // FIX: For ASCII, we must pick the answer NOW.
+
+            let finalAnswer = this.generateRandomCode();
+            let asciiConfig = {};
+
+            if (type === 'ASCII') {
+                const asciiPool = ['KEY', 'LOCK', 'BOMB', 'GHOST'];
+                finalAnswer = asciiPool[Math.floor(Math.random() * asciiPool.length)];
+                asciiConfig = { answer: finalAnswer };
+            }
+
             const taskId = `TSK-${String(i + 1).padStart(2, '0')}-${type.substring(0, 3)}`;
 
             let puzzle = {
                 id: `stage_${i + 1}`,
                 taskId: taskId,
                 type: type,
-                answerCode: answerCode,
+                answerCode: finalAnswer,
                 printLabel: `TASK ${i + 1} / ${count}`,
-                clueText: this.getScrubbedClueText(type)
+                clueText: this.getScrubbedClueText(type),
+                config: asciiConfig // Store specific config
             };
 
             if (type === 'CIPHER') {
@@ -84,7 +102,7 @@ class GameManager {
             this.puzzles.push(puzzle);
         }
 
-        console.log("Game Generated Config:", this.puzzles.map(p => `${p.type} (${p.variant || ''})`).join(', '));
+        console.log("Game Generated Config:", this.puzzles.map(p => `${p.type} (${p.answerCode})`).join(', '));
     }
 
     generateRandomCode() {
@@ -102,7 +120,8 @@ class GameManager {
             'MAZE_VERTICAL': "FOLLOW THE PATH TO UNLOCK.",
             'FOLDING': "FOLD REALITY TO SEE THE TRUTH.",
             'SOUND_WAVE': "ANALYZE FREQUENCY.",
-            'CIPHER': "DECRYPT THE SIGNAL."
+            'CIPHER': "DECRYPT THE SIGNAL.",
+            'ASCII': "IDENTIFY THE SILHOUETTE."
         };
         return clues[type] || "SOLVE PUZZLE TO PROCEED.";
     }
@@ -122,6 +141,7 @@ class GameManager {
             let foldingData = null;
             let soundData = null;
             let cipherData = null;
+            let asciiData = null;
 
             if (puzzle.type === 'MAZE_VERTICAL') {
                 const res = await puzzleFactory.generate('MAZE_VERTICAL', { answer: puzzle.answerCode });
@@ -131,11 +151,11 @@ class GameManager {
                 foldingData = res.foldingData;
             } else if (puzzle.type === 'SOUND_WAVE') {
                 const freq = parseInt(puzzle.answerCode) || 440; // If random code isn't number, this might be weird.
-                // Correction: Random code is likely text "KJ3M2". 
+                // Correction: Random code is likely text "KJ3M2".
                 // Sound Wave usually expects a Number for frequency?
                 // Or we map the text number to something?
                 // Let's generate a random frequency for visual, but answer is the CODE.
-                // Wait, Sound Wave puzzle usually asks to ENTER HERTZ VALUE. 
+                // Wait, Sound Wave puzzle usually asks to ENTER HERTZ VALUE.
                 // If answer is "KJ3M2", how do they enter it?
                 // User requirement: "Randomize puzzles and answers".
                 // If the puzzle type is Sound Wave, the answer SHOULD be the frequency number.
@@ -143,7 +163,7 @@ class GameManager {
                 // Let's override the answer code for Sound Wave to be a number.
                 // But we generated it as Alphanumeric earlier.
                 // FIX: Let's regenerate answerCode for Sound Wave here? Or accept text?
-                // If Sound Wave, let's treat the answerCode as text they simply have to enter, 
+                // If Sound Wave, let's treat the answerCode as text they simply have to enter,
                 // but the visual is just decorative frequency.
 
                 const res = await puzzleFactory.generate('SOUND_WAVE', { frequency: 440 + Math.random() * 440 });

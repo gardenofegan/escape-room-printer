@@ -327,6 +327,18 @@
             height: 100%;
             background: linear-gradient(to top left, transparent calc(50% - 1px), black calc(50% - 1px), black calc(50% + 1px), transparent calc(50% + 1px));
         }
+
+        /* ASCII ART STYLES */
+        .ascii-art {
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre;
+            line-height: 1.0;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+            font-size: 16px;
+            /* Adjust size to fit receipt width */
+        }
     </style>
 </head>
 
@@ -455,6 +467,15 @@
         </div>
     </div>
     {{/if}}
+    {{/if}}
+
+    {{#if asciiData}}
+    <div class="ascii-art">
+        {{asciiData.art}}
+    </div>
+    <div style="text-align:center; font-size:12px; margin-top:5px;">
+        IDENTIFY THE OBJECT
+    </div>
     {{/if}}
 
     <div class="footer">

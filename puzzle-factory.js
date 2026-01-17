@@ -7,6 +7,7 @@ class PuzzleFactory {
             'FOLDING': this.generateFoldingPuzzle.bind(this),
             'SOUND_WAVE': this.generateSoundWavePuzzle.bind(this),
             'CIPHER': this.generateCipherPuzzle.bind(this),
+            'ASCII': this.generateAsciiPuzzle.bind(this),
             'TEXT': this.generateTextPuzzle.bind(this)
         };
     }
@@ -232,6 +233,87 @@ class PuzzleFactory {
                 bars,
                 frequency: config.frequency || 440, // Logic for renderer to play
                 pattern: config.pattern || "loop"
+            }
+        };
+    }
+
+    async generateAsciiPuzzle(config) {
+        // ASCII Art Silhouette
+        // Returns { type: 'ASCII', asciiData: { art: string, answer: string } }
+
+        const library = [
+            {
+                name: 'KEY',
+                art:
+                    `
+   .---.
+  /     \\
+  |  O  |
+  \\     /
+   '---'
+     |
+     |
+     |
+   .-'-.
+   '---'
+`
+            },
+            {
+                name: 'LOCK',
+                art:
+                    `
+   .---.
+  /  _  \\
+ |  _  |
+ | | | |
+ |_| |_|
+ |     |
+ |  O  |
+ |_____|
+`
+            },
+            {
+                name: 'BOMB',
+                art:
+                    `
+      .--.
+     /    \\
+    |  ()  |
+     \\    /
+      '--'
+       ||
+      _||_
+     /____\\
+`
+            },
+            {
+                name: 'GHOST',
+                art:
+                    `
+   .-. 
+  ( " )
+   / \\
+  (   )
+  /   \\
+ (_/ \\_)
+`
+            }
+        ];
+
+        // Randomly select if answer not provided
+        let item = null;
+        if (config.answer) {
+            item = library.find(i => i.name === config.answer);
+        }
+        if (!item) {
+            item = library[Math.floor(Math.random() * library.length)];
+        }
+
+        return {
+            type: 'ASCII',
+            asciiData: {
+                art: item.art,
+                answer: item.name
             }
         };
     }
