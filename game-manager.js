@@ -14,7 +14,11 @@ class GameManager {
         this.hintsUsed = {}; // { puzzleId: count }
         this.maxHintsPerPuzzle = 2;
         this.hintPenaltyMs = 60000; // 1 minute per hint
+        this.hintPenaltyMs = 60000; // 1 minute per hint
         this.totalHintPenalty = 0;
+
+        // Random flavor events
+        this.flavorEvents = [];
     }
 
     async init() {
@@ -23,7 +27,12 @@ class GameManager {
         this.puzzles = [];
         this.mode = 'CONFIG';
         // Menu will be displayed in console by renderer, not printed
+        // Menu will be displayed in console by renderer, not printed
         this.pendingRevealConfirmation = false;
+
+        // Clear any pending flavor events from previous run
+        this.flavorEvents.forEach(id => clearTimeout(id));
+        this.flavorEvents = [];
     }
 
     // Returns menu text for console display (called by renderer via IPC)
@@ -360,6 +369,9 @@ class GameManager {
 
                 console.log("Game Started!");
 
+                // Schedule Random Flavor Events
+                this.scheduleRandomEvents(parseInt(normalizedCode));
+
                 // Deliver First Puzzle
                 const nextPuzzle = this.getCurrentPuzzle();
                 if (nextPuzzle) {
@@ -647,6 +659,65 @@ class GameManager {
         ];
 
         return hints[hintNumber - 1] || hints[hints.length - 1];
+    }
+
+    async scheduleRandomEvents(puzzleCount) {
+        // Clear old events
+        this.flavorEvents.forEach(id => clearTimeout(id));
+        this.flavorEvents = [];
+
+        let numEvents = 0;
+        if (puzzleCount <= 5) numEvents = 1 + Math.floor(Math.random() * 2); // 1-2 events
+        else if (puzzleCount <= 10) numEvents = 2 + Math.floor(Math.random() * 2); // 2-3 events
+        else numEvents = 3 + Math.floor(Math.random() * 2); // 3-4 events
+
+        console.log(`Scheduling ${numEvents} flavor events.`);
+
+        // Schedule events randomly between 2 minutes and 20 minutes (or end of game guess)
+        // We act like the game takes roughly 5 mins per puzzle max
+        const maxTimeMs = Math.min(puzzleCount * 5 * 60 * 1000, 45 * 60 * 1000);
+
+        for (let i = 0; i < numEvents; i++) {
+            // Random time, but at least 2 mins in
+            const delay = 120000 + Math.random() * (maxTimeMs - 120000);
+
+            const timerId = setTimeout(() => {
+                this.triggerFlavorEvent();
+            }, delay);
+
+            this.flavorEvents.push(timerId);
+            console.log(`Flavor event scheduled for +${Math.floor(delay / 60000)}m`);
+        }
+    }
+
+    async triggerFlavorEvent() {
+        // Don't interrupt if we aren't playing
+        if (this.mode !== 'PLAYING') return;
+
+        console.log("Triggering Random Flavor Event...");
+        try {
+            const flavor = puzzleFactory.generateFlavorContent();
+
+            // Render receipt
+            const imageBuffer = await receiptRenderer.renderReceipt({
+                // Minimal header/footer for flavor
+                missionName: "INCOMING MESSAGE",
+                timeElapsed: this.getElapsedTime(),
+                teamName: configManager.get('teamName'),
+                flavorData: flavor.flavorData
+            });
+
+            const flavorObj = {
+                type: 'image',
+                imageBuffer: imageBuffer,
+                printLabel: "FLAVOR EVENT"
+            };
+
+            await escapePrinter.printPuzzle(flavorObj);
+
+        } catch (err) {
+            console.error("Failed to trigger flavor event:", err);
+        }
     }
 
     async printParentAnswerSheet() {

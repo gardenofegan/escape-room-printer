@@ -735,6 +735,29 @@
         {{/if}}
         <div style="font-size: 12px; margin-top: 5px;">SCAN CODE TO SUBMIT</div>
     </div>
+
+    {{#if flavorData}}
+    <div style="margin: 20px 0; padding: 20px; border: 4px dashed black; text-align:center;">
+        <div style="font-weight:900; margin-bottom:15px; font-size:18px;">🛑 SYSTEM INTERRUPT 🛑</div>
+
+        {{#if flavorData.isVisual}}
+        <div
+            style="font-family:'Courier New', monospace; font-size:14px; white-space:pre; line-height:1.2; font-weight:bold; margin: 20px 0;">
+            {{#if (eq flavorData.visualType "WAITING_GUY")}}
+            O
+            /|\ <-- ME WAITING / \ {{/if}} {{#if (eq flavorData.visualType "SKELETON" )}} .-. (o.o) |=| __|__ {{/if}}
+                {{#if (eq flavorData.visualType "HOURGLASS" )}} +-------+ \~~~~~/ \ / \ / / \ / \ /_____\ +-------+
+                {{/if}} {{#if (eq flavorData.visualType "COFFEE" )}} ) ( ( ) ) ___{___}_ [ ] \_______/ {{/if}} {{#if (eq
+                flavorData.visualType "ZZZ" )}} Z z z _____ (_____) {{/if}} {{#if (eq flavorData.visualType "TUMBLEWEED"
+                )}} .@. .@@@@@. '@@@' '@' {{/if}} {{#if (eq flavorData.visualType "ERROR_ROBOT" )}} [0_0] /|___|\ d b
+                {{/if}} </div>
+                {{/if}}
+
+                <div style="font-size:24px; font-weight:900; letter-spacing:1px;">
+                    {{flavorData.text}}
+                </div>
+        </div>
+        {{/if}}
 </body>
 
 </html>

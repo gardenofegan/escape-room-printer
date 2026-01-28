@@ -1036,6 +1036,85 @@ class PuzzleFactory {
         };
     }
 
+    generateFlavorContent() {
+        const visualTypes = ['WAITING_GUY', 'SKELETON', 'HOURGLASS', 'COFFEE', 'ZZZ', 'TUMBLEWEED', 'ERROR_ROBOT'];
+
+        // 30% chance of visual, 70% text
+        const isVisual = Math.random() < 0.3;
+
+        if (isVisual) {
+            const visual = visualTypes[Math.floor(Math.random() * visualTypes.length)];
+            let caption = "";
+            let data = {};
+
+            switch (visual) {
+                case 'WAITING_GUY':
+                    caption = "STILL WAITING...";
+                    break;
+                case 'SKELETON':
+                    caption = "I'VE BEEN WAITING FOR 84 YEARS...";
+                    break;
+                case 'HOURGLASS':
+                    caption = "TIME IS TICKING.";
+                    break;
+                case 'COFFEE':
+                    caption = "I'M TAKING A BREAK.";
+                    break;
+                case 'ZZZ':
+                    caption = "SYSTEM SLEEP MODE INITIATED.";
+                    break;
+                case 'TUMBLEWEED':
+                    caption = "*WIND BLOWING*";
+                    break;
+                case 'ERROR_ROBOT':
+                    caption = "ERROR: USER TOO SLOW.";
+                    break;
+            }
+
+            return {
+                type: 'FLAVOR',
+                flavorData: {
+                    isVisual: true,
+                    visualType: visual,
+                    text: caption
+                }
+            };
+        } else {
+            // Text only messages
+            const messages = [
+                "Seriously, what's taking so long?",
+                "I've seen glaciers move faster.",
+                "Did you fall asleep?",
+                "I bet the other team is winning.",
+                "Error: User connection too slow.",
+                "Buffering genius... please wait.",
+                "Are you sure you're in the right room?",
+                "Have you tried turning it off and on again?",
+                "I'm getting paid by the hour, so take your time.",
+                "Is this the part where you solve the puzzle?",
+                "System Idle... System Bored... System Juding You.",
+                "I could calculate Pi to the last digit while I wait.",
+                "Loading patience... [=============] 99% used.",
+                "Hint: The answer is usually not 'PASSWORD'.",
+                "Checking watch... oh wait, I'm a printer.",
+                "Do you need a manual? Or a miracle?",
+                "Status: Still waiting.",
+                "Imagine if this was timed. Oh wait, it is.",
+                "You scan, I print. That's the deal. I'm doing my part.",
+                "Maybe try typing harder?",
+                "I'm writing a novel while I wait. Ch 3: The Long Pause."
+            ];
+
+            return {
+                type: 'FLAVOR',
+                flavorData: {
+                    isVisual: false,
+                    text: messages[Math.floor(Math.random() * messages.length)]
+                }
+            };
+        }
+    }
+
     // Helper for Barcodes (Shared)
     async generateBarcode(text) {
         return new Promise((resolve, reject) => {
