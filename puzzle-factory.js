@@ -777,14 +777,20 @@ class PuzzleFactory {
 
         // Create puzzle by removing some numbers
         const puzzle = solved.map(row => [...row]);
-        const removeCount = 6 + Math.floor(Math.random() * 3); // Remove 6-8 cells
 
-        for (let i = 0; i < removeCount; i++) {
+        // CRITICAL: Always remove corners because they are the answer key
+        const corners = [[0, 0], [0, 3], [3, 0], [3, 3]];
+        corners.forEach(([y, x]) => puzzle[y][x] = 0);
+
+        // Remove additional random cells to reach total 7-9 hidden cells
+        const additionalRemovals = 3 + Math.floor(Math.random() * 3);
+
+        for (let i = 0; i < additionalRemovals; i++) {
             let x, y;
             do {
                 x = Math.floor(Math.random() * 4);
                 y = Math.floor(Math.random() * 4);
-            } while (puzzle[y][x] === 0);
+            } while (puzzle[y][x] === 0); // Find a cell not already removed
             puzzle[y][x] = 0;
         }
 

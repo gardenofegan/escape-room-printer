@@ -23,6 +23,7 @@ class GameManager {
         this.puzzles = [];
         this.mode = 'CONFIG';
         // Menu will be displayed in console by renderer, not printed
+        this.pendingRevealConfirmation = false;
     }
 
     // Returns menu text for console display (called by renderer via IPC)
@@ -67,7 +68,7 @@ class GameManager {
         const puzzlePool = {
             easy: ['RIDDLE', 'FOLDING', 'NUMBER_SEQUENCE', 'ANAGRAM'],
             medium: ['MAZE_VERTICAL', 'WORD_SEARCH', 'SYMBOL_MATH', 'SPOT_DIFF'],
-            hard: ['CIPHER', 'MINI_SUDOKU', 'ASCII', 'MICRO_TEXT', 'SOUND_WAVE']
+            hard: ['CIPHER', 'MINI_SUDOKU', 'ASCII', 'SOUND_WAVE']
         };
 
         const cipherVariants = ['PIGPEN', 'CAESAR', 'ICON'];
@@ -327,6 +328,23 @@ class GameManager {
     async submitAnswer(code) {
         const normalizedCode = code.trim().toUpperCase();
 
+        // --- ANSWER REVEAL CONFIRMATION ---
+        if (this.pendingRevealConfirmation) {
+            if (['Y', 'YES', 'SURE', 'OK'].includes(normalizedCode)) {
+                this.pendingRevealConfirmation = false;
+                return await this.revealAnswer();
+            } else if (['N', 'NO', 'CANCEL'].includes(normalizedCode)) {
+                this.pendingRevealConfirmation = false;
+                return { success: false, message: "REQUEST CANCELLED." };
+            } else {
+                return {
+                    success: false,
+                    isHint: true, // Re-use hint display style
+                    message: "WARNING: REVEALING THE ANSWER WILL BYPASS THE PUZZLE.\nARE YOU SURE? (TYPE YES or NO)"
+                };
+            }
+        }
+
         // --- CONFIG MODE ---
         if (this.mode === 'CONFIG') {
             const validCounts = ['5', '10', '15', '20'];
@@ -338,6 +356,7 @@ class GameManager {
                 this.mode = 'PLAYING';
                 this.startTime = Date.now();
                 this.currentStage = 0;
+                this.pendingRevealConfirmation = false;
 
                 console.log("Game Started!");
 
@@ -429,6 +448,7 @@ class GameManager {
         // Standard answer check
         if (normalizedCode === puzzle.answerCode) {
             this.currentStage++;
+            this.pendingRevealConfirmation = false;
             const nextPuzzle = this.getCurrentPuzzle();
 
             if (nextPuzzle) {
@@ -483,46 +503,77 @@ class GameManager {
             };
         }
 
+        // HINT 2: START REVEAL FLOW
+        if (usedCount === 1) {
+            this.pendingRevealConfirmation = true;
+            return {
+                success: true, // Treated as valid command to avoid error sound
+                isHint: true, // Use warning style
+                message: "WARNING: HINT 2 REVEALS THE ANSWER.\nARE YOU SURE? (TYPE YES or NO)"
+            };
+        }
+
+        // HINT 1: Normal Hint
+        return this.processHint(puzzleId, usedCount + 1, puzzle);
+    }
+
+    async revealAnswer() {
+        const puzzle = this.getCurrentPuzzle();
+        const puzzleId = puzzle.id;
+        const usedCount = this.hintsUsed[puzzleId] || 0;
+
+        // Force to max hints used
+        const hintNumber = 2;
+
+        return this.processHint(puzzleId, hintNumber, puzzle, true);
+    }
+
+    processHint(puzzleId, hintNumber, puzzle, isReveal = false) {
         // Increment hint count and add penalty
-        this.hintsUsed[puzzleId] = usedCount + 1;
-
-        // Calculate times BEFORE and AFTER penalty
-        const timeBeforePenalty = this.getElapsedTime(false); // Raw time without penalties
+        this.hintsUsed[puzzleId] = hintNumber;
         this.totalHintPenalty += this.hintPenaltyMs;
-        const timeAfterPenalty = this.getElapsedTime(true);  // Time with all penalties
+
+        const timeBeforePenalty = this.getElapsedTime(false);
+        const timeAfterPenalty = this.getElapsedTime(true);
         const totalPenaltyMinutes = Math.floor(this.totalHintPenalty / 60000);
-
-        const hintNumber = usedCount + 1;
         const hintsRemaining = this.maxHintsPerPuzzle - hintNumber;
-        const hintText = this.generateHintForPuzzle(puzzle, hintNumber);
 
-        // Print hint receipt with clear time impact
-        const hintReceipt =
-            `╔═══════════════════════════╗\n` +
-            `║    🔓 CLASSIFIED INTEL 🔓    ║\n` +
-            `╠═══════════════════════════╣\n` +
-            `║ HINT ${hintNumber} of ${this.maxHintsPerPuzzle}                    ║\n` +
-            `╠═══════════════════════════╣\n\n` +
-            `${hintText}\n\n` +
-            `╔═══════════════════════════╗\n` +
-            `║ ⏱️  TIME PENALTY APPLIED   ║\n` +
-            `╠═══════════════════════════╣\n` +
-            `║ Before: ${timeBeforePenalty.padEnd(8)}           ║\n` +
-            `║ Penalty: +1:00              ║\n` +
-            `║ NEW TIME: ${timeAfterPenalty.padEnd(6)}         ║\n` +
-            `╠═══════════════════════════╣\n` +
-            `║ Total Penalties: +${totalPenaltyMinutes} min     ║\n` +
-            `║ Hints Remaining: ${hintsRemaining}          ║\n` +
-            `╚═══════════════════════════╝`;
+        let hintText = "";
+        let headerText = "";
 
-        await escapePrinter.printCustom(hintReceipt);
+        if (isReveal) {
+            headerText = "🔓  ANSWER REVEALED  🔓";
+            hintText = `THE ANSWER CODE IS: ${puzzle.answerCode}`;
+        } else {
+            headerText = "🔓 CLASSIFIED INTEL 🔓";
+            hintText = this.generateHintForPuzzle(puzzle, hintNumber);
+        }
+
+        // Screen-only display lines (No Printing)
+        const screenLines = [
+            "╔═══════════════════════════════╗",
+            `║   ${headerText.padEnd(27).substring(0, 27)} ║`,
+            "╠═══════════════════════════════╣",
+            `║ HINT ${hintNumber} of ${this.maxHintsPerPuzzle}                    ║`,
+            "╠═══════════════════════════════╣",
+            "",
+            ...hintText.split('\n').map(l => ` ${l}`), // Indent
+            "",
+            "╔═══════════════════════════════╗",
+            "║ ⏱️  TIME PENALTY APPLIED       ║",
+            "╠═══════════════════════════════╣",
+            `║ Before: ${timeBeforePenalty.padEnd(20)}  ║`,
+            `║ Penalty: +1:00                ║`,
+            `║ NEW TIME: ${timeAfterPenalty.padEnd(20)}║`,
+            "╚═══════════════════════════════╝"
+        ];
 
         return {
             success: true,
             isHint: true,
-            penaltyMs: this.hintPenaltyMs, // 60000ms = 1 minute
-            message: `HINT ${hintNumber} DELIVERED. TIME IS NOW ${timeAfterPenalty}`,
-            hintText: hintText,
+            penaltyMs: this.hintPenaltyMs,
+            message: `HINT ${hintNumber} DELIVERED.`,
+            lines: screenLines,
             hintsRemaining: hintsRemaining,
             newTime: timeAfterPenalty
         };

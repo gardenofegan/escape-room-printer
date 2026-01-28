@@ -319,9 +319,13 @@ async function processInput(code, isScan) {
             stopTone(); // Stop any looping audio if active
 
             // Check if this was a hint request
-            if (result.isHint && result.penaltyMs) {
-                addHintPenalty(result.penaltyMs);
-                playSound('print'); // Hint prints a receipt
+            if (result.isHint) {
+                if (result.penaltyMs) addHintPenalty(result.penaltyMs);
+
+                if (result.lines) {
+                    await displayLines(result.lines, "menu-line");
+                }
+
                 await typeWriter(`⚠️ ${result.message}`, "warning-msg", 30);
             }
             // Check if this is a HELP or STATUS response (display multi-line)
