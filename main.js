@@ -62,6 +62,25 @@ app.whenReady().then(() => {
     };
   });
 
+  // Handle hint request
+  ipcMain.handle('request-hint', async (event) => {
+    console.log("Received hint request");
+    const result = await gameManager.requestHint();
+    return result;
+  });
+
+  // Handle parent answer sheet print request
+  ipcMain.handle('print-answer-sheet', async (event) => {
+    console.log("Received answer sheet print request");
+    const result = await gameManager.printParentAnswerSheet();
+    return result;
+  });
+
+  // Handle game status request
+  ipcMain.handle('get-game-status', async (event) => {
+    return gameManager.getGameStatus();
+  });
+
   // Register a global shortcut to quit the application (Ctrl+Q or Command+Q)
   globalShortcut.register('CommandOrControl+Q', () => {
     app.quit();

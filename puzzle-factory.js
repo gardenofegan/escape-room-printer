@@ -8,7 +8,16 @@ class PuzzleFactory {
             'SOUND_WAVE': this.generateSoundWavePuzzle.bind(this),
             'CIPHER': this.generateCipherPuzzle.bind(this),
             'ASCII': this.generateAsciiPuzzle.bind(this),
-            'TEXT': this.generateTextPuzzle.bind(this)
+            'TEXT': this.generateTextPuzzle.bind(this),
+            // New puzzle types
+            'WORD_SEARCH': this.generateWordSearchPuzzle.bind(this),
+            'SYMBOL_MATH': this.generateSymbolMathPuzzle.bind(this),
+            'NUMBER_SEQUENCE': this.generateNumberSequencePuzzle.bind(this),
+            'RIDDLE': this.generateRiddlePuzzle.bind(this),
+            'ANAGRAM': this.generateAnagramPuzzle.bind(this),
+            'MINI_SUDOKU': this.generateMiniSudokuPuzzle.bind(this),
+            'MICRO_TEXT': this.generateMicroTextPuzzle.bind(this),
+            'SPOT_DIFF': this.generateSpotDiffPuzzle.bind(this)
         };
     }
 
@@ -477,6 +486,414 @@ class PuzzleFactory {
             type: 'TEXT',
             textData: {
                 content: config.text || "NO DATA"
+            }
+        };
+    }
+
+    // ========== NEW PUZZLE GENERATORS ==========
+
+    async generateWordSearchPuzzle(config) {
+        // Word Search: Find words, unused letters spell the answer
+        const answer = (config.answer || "SECRET").toUpperCase();
+        const gridSize = 10;
+
+        // Words to find (themed)
+        const wordBank = ['CODE', 'HACK', 'DATA', 'SCAN', 'BYTE', 'FILE', 'LOCK', 'PASS'];
+        const wordsToFind = wordBank.sort(() => Math.random() - 0.5).slice(0, 4);
+
+        // Initialize grid with answer letters first, then fill rest
+        let grid = [];
+        for (let i = 0; i < gridSize * gridSize; i++) {
+            grid.push('');
+        }
+
+        // Place answer letters in a readable path (scattered but in order)
+        const answerPositions = [];
+        for (let i = 0; i < answer.length; i++) {
+            let pos;
+            do {
+                pos = Math.floor(Math.random() * (gridSize * gridSize));
+            } while (answerPositions.includes(pos) || grid[pos] !== '');
+            grid[pos] = answer[i];
+            answerPositions.push(pos);
+        }
+
+        // Place words in horizontal/vertical positions
+        const placedWords = [];
+        for (const word of wordsToFind) {
+            let placed = false;
+            for (let attempt = 0; attempt < 50 && !placed; attempt++) {
+                const horizontal = Math.random() > 0.5;
+                const startX = Math.floor(Math.random() * (horizontal ? gridSize - word.length : gridSize));
+                const startY = Math.floor(Math.random() * (horizontal ? gridSize : gridSize - word.length));
+
+                let canPlace = true;
+                const positions = [];
+                for (let i = 0; i < word.length; i++) {
+                    const x = horizontal ? startX + i : startX;
+                    const y = horizontal ? startY : startY + i;
+                    const pos = y * gridSize + x;
+                    if (grid[pos] !== '' && grid[pos] !== word[i]) {
+                        canPlace = false;
+                        break;
+                    }
+                    positions.push({ pos, char: word[i] });
+                }
+
+                if (canPlace) {
+                    positions.forEach(p => grid[p.pos] = p.char);
+                    placedWords.push(word);
+                    placed = true;
+                }
+            }
+        }
+
+        // Fill remaining empty cells with random letters (not answer letters ideally)
+        const filler = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+        for (let i = 0; i < grid.length; i++) {
+            if (grid[i] === '') {
+                grid[i] = filler[Math.floor(Math.random() * filler.length)];
+            }
+        }
+
+        return {
+            type: 'WORD_SEARCH',
+            wordSearchData: {
+                grid: grid,
+                gridSize: gridSize,
+                words: placedWords,
+                answerPositions: answerPositions // For hint generation
+            }
+        };
+    }
+
+    async generateSymbolMathPuzzle(config) {
+        // Symbol Math: Solve for symbol values
+        // e.g., 🍎 + 🍎 = 10, 🍎 + 🍌 = 12, solve for 🍌
+
+        const symbols = ['🍎', '🍌', '🍇', '⭐', '🔷', '🌙'];
+        const picked = symbols.sort(() => Math.random() - 0.5).slice(0, 3);
+
+        // Generate solvable values
+        const values = {
+            [picked[0]]: Math.floor(Math.random() * 5) + 2, // 2-6
+            [picked[1]]: Math.floor(Math.random() * 5) + 2,
+            [picked[2]]: Math.floor(Math.random() * 5) + 2
+        };
+
+        // Create equations
+        const equations = [
+            { left: `${picked[0]} + ${picked[0]}`, right: values[picked[0]] * 2 },
+            { left: `${picked[0]} + ${picked[1]}`, right: values[picked[0]] + values[picked[1]] },
+            { left: `${picked[1]} + ${picked[2]}`, right: values[picked[1]] + values[picked[2]] }
+        ];
+
+        // The answer is the value of the third symbol
+        const answer = values[picked[2]];
+        const askSymbol = picked[2];
+
+        return {
+            type: 'SYMBOL_MATH',
+            symbolMathData: {
+                equations: equations,
+                askSymbol: askSymbol,
+                answer: answer
+            }
+        };
+    }
+
+    async generateNumberSequencePuzzle(config) {
+        // Number Sequence: Find the pattern and next number
+
+        const patterns = [
+            { name: 'double', gen: (n, i) => n * Math.pow(2, i), start: 2, desc: 'Doubling' },
+            { name: 'add3', gen: (n, i) => n + 3 * i, start: 1, desc: 'Add 3' },
+            { name: 'square', gen: (n, i) => (i + 1) * (i + 1), start: 1, desc: 'Squares' },
+            { name: 'fib', gen: (n, i, arr) => i < 2 ? (i + 1) : arr[i - 1] + arr[i - 2], start: 1, desc: 'Fibonacci' },
+            { name: 'add5', gen: (n, i) => n + 5 * i, start: 2, desc: 'Add 5' },
+            { name: 'triple', gen: (n, i) => n * Math.pow(3, i), start: 1, desc: 'Tripling' }
+        ];
+
+        const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+        const sequence = [];
+
+        for (let i = 0; i < 6; i++) {
+            if (pattern.name === 'fib') {
+                sequence.push(pattern.gen(pattern.start, i, sequence));
+            } else {
+                sequence.push(pattern.gen(pattern.start, i));
+            }
+        }
+
+        // Show first 5, answer is 6th
+        const answer = sequence[5];
+
+        return {
+            type: 'NUMBER_SEQUENCE',
+            sequenceData: {
+                visible: sequence.slice(0, 5),
+                answer: answer,
+                hint: pattern.desc
+            }
+        };
+    }
+
+    async generateRiddlePuzzle(config) {
+        // Riddle: Classic "What am I?" riddles
+
+        const riddles = [
+            {
+                text: "The more of me there is, the less you see. What am I?",
+                answer: "DARKNESS"
+            },
+            {
+                text: "I have keys but no locks. I have space but no room. You can enter but can't go inside. What am I?",
+                answer: "KEYBOARD"
+            },
+            {
+                text: "I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I?",
+                answer: "ECHO"
+            },
+            {
+                text: "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?",
+                answer: "MAP"
+            },
+            {
+                text: "The more you take, the more you leave behind. What am I?",
+                answer: "FOOTSTEPS"
+            },
+            {
+                text: "I can be cracked, made, told, and played. What am I?",
+                answer: "JOKE"
+            },
+            {
+                text: "I have hands but cannot clap. What am I?",
+                answer: "CLOCK"
+            },
+            {
+                text: "I go up but never come down. What am I?",
+                answer: "AGE"
+            }
+        ];
+
+        const riddle = config.riddle || riddles[Math.floor(Math.random() * riddles.length)];
+
+        return {
+            type: 'RIDDLE',
+            riddleData: {
+                text: riddle.text,
+                answer: riddle.answer
+            }
+        };
+    }
+
+    async generateAnagramPuzzle(config) {
+        // Anagram: Unscramble words, circled letters form the code
+
+        const answer = (config.answer || "SECRET").toUpperCase();
+
+        // Word bank with specific letters to extract
+        const wordPool = [
+            { word: "PLANET", extract: 0 }, // P
+            { word: "ROCKET", extract: 0 }, // R
+            { word: "ESCAPE", extract: 0 }, // E
+            { word: "SECOND", extract: 0 }, // S
+            { word: "CASTLE", extract: 0 }, // C
+            { word: "DANGER", extract: 3 }, // G
+            { word: "HIDDEN", extract: 0 }, // H
+            { word: "WINTER", extract: 0 }, // W
+            { word: "BRONZE", extract: 0 }, // B
+            { word: "MASTER", extract: 0 }, // M
+            { word: "FLIGHT", extract: 0 }, // F
+            { word: "ANCHOR", extract: 0 }, // A
+        ];
+
+        // Select words that can spell our answer (or use random approach)
+        const selectedWords = [];
+        for (let i = 0; i < Math.min(5, answer.length); i++) {
+            const targetChar = answer[i];
+            // Find a word containing this character
+            let found = wordPool.find(w =>
+                w.word.includes(targetChar) &&
+                !selectedWords.find(s => s.original === w.word)
+            );
+            if (found) {
+                const idx = found.word.indexOf(targetChar);
+                selectedWords.push({
+                    original: found.word,
+                    scrambled: found.word.split('').sort(() => Math.random() - 0.5).join(''),
+                    extractIndex: idx,
+                    displayPosition: idx + 1, // 1-indexed for display
+                    extractChar: targetChar
+                });
+            }
+        }
+
+        // Ensure we have enough words
+        while (selectedWords.length < 4) {
+            const w = wordPool[Math.floor(Math.random() * wordPool.length)];
+            if (!selectedWords.find(s => s.original === w.word)) {
+                selectedWords.push({
+                    original: w.word,
+                    scrambled: w.word.split('').sort(() => Math.random() - 0.5).join(''),
+                    extractIndex: 0,
+                    displayPosition: 1, // 1-indexed for display
+                    extractChar: w.word[0]
+                });
+            }
+        }
+
+        // Build answer from extracted chars
+        const builtAnswer = selectedWords.map(w => w.extractChar).join('');
+
+        return {
+            type: 'ANAGRAM',
+            anagramData: {
+                words: selectedWords,
+                answer: builtAnswer
+            }
+        };
+    }
+
+    async generateMiniSudokuPuzzle(config) {
+        // Mini 4x4 Sudoku: Answer is sum of corner values
+
+        // Generate a solved 4x4 Sudoku
+        const solved = [
+            [1, 2, 3, 4],
+            [3, 4, 1, 2],
+            [2, 1, 4, 3],
+            [4, 3, 2, 1]
+        ];
+
+        // Shuffle rows within blocks and columns within blocks for variety
+        // Simple approach: swap some rows/cols
+        if (Math.random() > 0.5) {
+            [solved[0], solved[1]] = [solved[1], solved[0]];
+            [solved[2], solved[3]] = [solved[3], solved[2]];
+        }
+
+        // Create puzzle by removing some numbers
+        const puzzle = solved.map(row => [...row]);
+        const removeCount = 6 + Math.floor(Math.random() * 3); // Remove 6-8 cells
+
+        for (let i = 0; i < removeCount; i++) {
+            let x, y;
+            do {
+                x = Math.floor(Math.random() * 4);
+                y = Math.floor(Math.random() * 4);
+            } while (puzzle[y][x] === 0);
+            puzzle[y][x] = 0;
+        }
+
+        // Answer is sum of corners in solved puzzle
+        const answer = solved[0][0] + solved[0][3] + solved[3][0] + solved[3][3];
+
+        return {
+            type: 'MINI_SUDOKU',
+            sudokuData: {
+                puzzle: puzzle,
+                solved: solved,
+                answer: answer,
+                instruction: "SUM OF CORNER VALUES"
+            }
+        };
+    }
+
+    async generateMicroTextPuzzle(config) {
+        // Micro Text: Large block of text with tiny hidden code
+
+        const answer = (config.answer || "SECRET").toUpperCase();
+
+        // Generate a block of "lorem ipsum" style text
+        const textLines = [
+            "PROCESSING DATA STREAM... ANALYZING SECURITY PROTOCOLS...",
+            "SCANNING NETWORK TRAFFIC FOR ANOMALIES...",
+            "FIREWALL STATUS: ACTIVE. ENCRYPTION: ENABLED.",
+            "MONITORING SYSTEM LOGS FOR UNAUTHORIZED ACCESS...",
+            "DATABASE INTEGRITY CHECK: PASSED.",
+            "RUNNING DIAGNOSTIC SUBROUTINES...",
+            "MEMORY ALLOCATION: OPTIMAL. CPU USAGE: NORMAL."
+        ];
+
+        // Position where the tiny text will appear (line number)
+        const hiddenLine = Math.floor(Math.random() * textLines.length);
+
+        // Build blocks with hidden code info
+        const blocks = textLines.map((text, idx) => ({
+            text: text,
+            hasHidden: idx === hiddenLine,
+            hiddenCode: idx === hiddenLine ? answer : null
+        }));
+
+        return {
+            type: 'MICRO_TEXT',
+            microTextData: {
+                blocks: blocks,
+                hiddenCode: answer,
+                hiddenLineIndex: hiddenLine,
+                instruction: "LOOK VERY CLOSELY AT LINE " + (hiddenLine + 1)
+            }
+        };
+    }
+
+    async generateSpotDiffPuzzle(config) {
+        // Spot the Difference: Two text blocks with N different characters
+
+        const diffCount = 4; // Number of differences
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+
+        // Generate base text block
+        const lineLength = 20;
+        const lineCount = 6;
+        let baseLines = [];
+
+        for (let i = 0; i < lineCount; i++) {
+            let line = "";
+            for (let j = 0; j < lineLength; j++) {
+                line += chars[Math.floor(Math.random() * chars.length)];
+            }
+            baseLines.push(line);
+        }
+
+        // Create modified version with differences
+        const diffChars = [];
+        const modifiedLines = baseLines.map(line => line.split(''));
+
+        for (let i = 0; i < diffCount; i++) {
+            let lineIdx, charIdx, newChar;
+            do {
+                lineIdx = Math.floor(Math.random() * lineCount);
+                charIdx = Math.floor(Math.random() * lineLength);
+                newChar = chars[Math.floor(Math.random() * chars.length)];
+            } while (
+                modifiedLines[lineIdx][charIdx] === newChar ||
+                diffChars.find(d => d.line === lineIdx && d.col === charIdx)
+            );
+
+            modifiedLines[lineIdx][charIdx] = newChar;
+            diffChars.push({
+                line: lineIdx,
+                col: charIdx,
+                original: baseLines[lineIdx][charIdx],
+                modified: newChar
+            });
+        }
+
+        // Answer is the different characters in order of appearance
+        const answer = diffChars
+            .sort((a, b) => a.line * 100 + a.col - (b.line * 100 + b.col))
+            .map(d => d.modified)
+            .join('');
+
+        return {
+            type: 'SPOT_DIFF',
+            spotDiffData: {
+                blockA: baseLines,
+                blockB: modifiedLines.map(l => l.join('')),
+                diffCount: diffCount,
+                answer: answer,
+                instruction: "FIND " + diffCount + " DIFFERENCES. TYPE THE NEW CHARACTERS."
             }
         };
     }

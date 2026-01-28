@@ -11,6 +11,7 @@ let isLocked = false;
 // Timer State
 let gameStartTime = null;
 let timerInterval = null;
+let timerPenaltyMs = 0; // Accumulated penalty from hints
 
 // Thresholds
 const SCANNER_CHAR_INTERVAL = 60;
@@ -89,7 +90,8 @@ function startTimer() {
 
     timerInterval = setInterval(() => {
         if (gameStartTime) {
-            const diff = Date.now() - gameStartTime;
+            // Include penalty in elapsed time calculation
+            const diff = (Date.now() - gameStartTime) + timerPenaltyMs;
             const minutes = Math.floor(diff / 60000);
             const seconds = Math.floor((diff % 60000) / 1000);
             const ms = Math.floor((diff % 1000) / 10); // Tens of ms
@@ -98,6 +100,12 @@ function startTimer() {
             timerElement.textContent = "00:00:00";
         }
     }, 50); // High refresh rate for cool effect
+}
+
+// Function to add hint penalty (called when hint result received)
+function addHintPenalty(penaltyMs) {
+    timerPenaltyMs += penaltyMs;
+    console.log(`Hint penalty added: +${penaltyMs / 1000}s. Total penalty: ${timerPenaltyMs / 1000}s`);
 }
 
 function createInputLine() {
@@ -277,16 +285,25 @@ async function processInput(code, isScan) {
         // Sync Timer
         if (result.startTime) {
             gameStartTime = result.startTime;
+            timerPenaltyMs = 0; // Reset penalty for new game
         }
 
         if (result.success) {
             stopTone(); // Stop any looping audio if active
-            playSound('success');
-            await typeWriter(`ACCESS GRANTED: ${result.message}`, "system-msg", 30);
-            if (result.nextPuzzleType) {
-                await new Promise(r => setTimeout(r, 500));
-                playSound('print');
-                await typeWriter(">>> INTIATING HARDCOPY OUTPUT <<<", "system-msg");
+
+            // Check if this was a hint request
+            if (result.isHint && result.penaltyMs) {
+                addHintPenalty(result.penaltyMs);
+                playSound('print'); // Hint prints a receipt
+                await typeWriter(`⚠️ ${result.message}`, "system-msg", 30);
+            } else {
+                playSound('success');
+                await typeWriter(`ACCESS GRANTED: ${result.message}`, "system-msg", 30);
+                if (result.nextPuzzleType) {
+                    await new Promise(r => setTimeout(r, 500));
+                    playSound('print');
+                    await typeWriter(">>> INTIATING HARDCOPY OUTPUT <<<", "system-msg");
+                }
             }
         } else if (result.isTaskScan) {
             playSound('type'); // Or a partial success sound

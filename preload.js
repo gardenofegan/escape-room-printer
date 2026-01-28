@@ -19,5 +19,9 @@ contextBridge.exposeInMainWorld('api', {
     },
     testPrint: () => ipcRenderer.invoke('test-print'),
     submitCode: (code) => ipcRenderer.invoke('submit-code', code),
-    getTheme: () => ipcRenderer.invoke('get-theme')
+    getTheme: () => ipcRenderer.invoke('get-theme'),
+    // New methods for hints and parent sheet
+    requestHint: () => ipcRenderer.invoke('request-hint'),
+    printAnswerSheet: () => ipcRenderer.invoke('print-answer-sheet'),
+    getGameStatus: () => ipcRenderer.invoke('get-game-status')
 });

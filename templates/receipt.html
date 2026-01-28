@@ -478,6 +478,150 @@
     </div>
     {{/if}}
 
+    {{!-- NEW PUZZLE TYPES --}}
+
+    {{#if wordSearchData}}
+    <div style="margin: 20px 0;">
+        <div style="font-weight:bold; margin-bottom:10px;">WORD SEARCH</div>
+        <div
+            style="display:grid; grid-template-columns:repeat({{wordSearchData.gridSize}}, 1fr); gap:2px; font-family:monospace; font-size:14px; font-weight:bold; width:fit-content; margin:0 auto;">
+            {{#each wordSearchData.grid}}
+            <div
+                style="width:18px; height:18px; display:flex; align-items:center; justify-content:center; border:1px solid #ccc;">
+                {{this}}</div>
+            {{/each}}
+        </div>
+        <div style="margin-top:15px; font-size:12px;">
+            FIND THESE WORDS:
+            {{#each wordSearchData.words}}
+            <span style="margin:0 5px; font-weight:bold;">{{this}}</span>
+            {{/each}}
+        </div>
+        <div style="font-size:10px; margin-top:10px; font-style:italic;">
+            UNUSED LETTERS SPELL THE CODE
+        </div>
+    </div>
+    {{/if}}
+
+    {{#if symbolMathData}}
+    <div style="margin: 20px 0; padding: 15px; border: 2px solid black;">
+        <div style="font-weight:bold; margin-bottom:15px;">SYMBOL EQUATIONS</div>
+        {{#each symbolMathData.equations}}
+        <div style="font-size:20px; margin:10px 0;">
+            {{this.left}} = {{this.right}}
+        </div>
+        {{/each}}
+        <div style="margin-top:20px; font-size:18px; font-weight:bold; border-top:2px dashed black; padding-top:10px;">
+            {{symbolMathData.askSymbol}} = ?
+        </div>
+    </div>
+    {{/if}}
+
+    {{#if sequenceData}}
+    <div style="margin: 20px 0; padding: 15px; border: 2px solid black;">
+        <div style="font-weight:bold; margin-bottom:10px;">NUMBER SEQUENCE</div>
+        <div style="font-size:24px; letter-spacing:5px; margin:15px 0;">
+            {{#each sequenceData.visible}}
+            {{this}}{{#unless @last}}, {{/unless}}
+            {{/each}}
+            , <span style="border-bottom:2px solid black; padding:0 15px;">?</span>
+        </div>
+        <div style="font-size:12px; margin-top:15px;">
+            FIND THE PATTERN. ENTER THE NEXT NUMBER.
+        </div>
+    </div>
+    {{/if}}
+
+    {{#if riddleData}}
+    <div style="margin: 20px 0; padding: 20px; border: 3px double black;">
+        <div style="font-weight:bold; margin-bottom:15px; font-size:16px;">🔮 RIDDLE 🔮</div>
+        <div style="font-size:16px; font-style:italic; line-height:1.5;">
+            "{{riddleData.text}}"
+        </div>
+        <div style="margin-top:20px; font-size:14px; font-weight:bold;">
+            TYPE YOUR ANSWER
+        </div>
+    </div>
+    {{/if}}
+
+    {{#if anagramData}}
+    <div style="margin: 20px 0; padding: 15px; border: 2px solid black;">
+        <div style="font-weight:bold; margin-bottom:15px;">UNSCRAMBLE THE WORDS</div>
+        {{#each anagramData.words}}
+        <div style="margin:10px 0; font-size:18px;">
+            <span style="font-family:monospace; letter-spacing:3px;">{{this.scrambled}}</span>
+            <span style="margin-left:10px; font-size:12px;">
+                (Circle letter #{{this.displayPosition}})
+            </span>
+        </div>
+        {{/each}}
+        <div style="margin-top:15px; font-size:12px; border-top:1px dashed black; padding-top:10px;">
+            THE CIRCLED LETTERS SPELL THE CODE
+        </div>
+    </div>
+    {{/if}}
+
+    {{#if sudokuData}}
+    <div style="margin: 20px 0;">
+        <div style="font-weight:bold; margin-bottom:10px;">MINI SUDOKU (4x4)</div>
+        <div
+            style="display:grid; grid-template-columns:repeat(4, 1fr); gap:0; width:fit-content; margin:0 auto; border:3px solid black;">
+            {{#each sudokuData.puzzle}}
+            {{#each this}}
+            <div
+                style="width:35px; height:35px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:bold; border:1px solid black; {{#if this}}{{else}}background:#eee;{{/if}}">
+                {{#if this}}{{this}}{{/if}}
+            </div>
+            {{/each}}
+            {{/each}}
+        </div>
+        <div style="margin-top:15px; font-size:12px;">
+            SOLVE THE PUZZLE. {{sudokuData.instruction}}.
+        </div>
+    </div>
+    {{/if}}
+
+    {{#if microTextData}}
+    <div style="margin: 20px 0; padding: 15px; border: 2px solid black;">
+        <div style="font-weight:bold; margin-bottom:10px;">SYSTEM LOG</div>
+        {{#each microTextData.blocks}}
+        <div
+            style="font-size:11px; margin:5px 0; font-family:monospace; {{#if this.hasHidden}}position:relative;{{/if}}">
+            {{this.text}}
+            {{#if this.hasHidden}}
+            <span style="font-size:5px; position:absolute; right:0; bottom:0;">{{this.hiddenCode}}</span>
+            {{/if}}
+        </div>
+        {{/each}}
+        <div style="margin-top:15px; font-size:10px; font-style:italic;">
+            {{microTextData.instruction}}
+        </div>
+    </div>
+    {{/if}}
+
+    {{#if spotDiffData}}
+    <div style="margin: 20px 0;">
+        <div style="font-weight:bold; margin-bottom:10px;">SPOT THE DIFFERENCES</div>
+        <div style="display:flex; justify-content:space-between; gap:10px;">
+            <div style="flex:1; padding:5px; border:2px solid black;">
+                <div style="font-size:10px; margin-bottom:5px; font-weight:bold;">BLOCK A</div>
+                {{#each spotDiffData.blockA}}
+                <div style="font-family:monospace; font-size:8px; letter-spacing:1px;">{{this}}</div>
+                {{/each}}
+            </div>
+            <div style="flex:1; padding:5px; border:2px solid black;">
+                <div style="font-size:10px; margin-bottom:5px; font-weight:bold;">BLOCK B</div>
+                {{#each spotDiffData.blockB}}
+                <div style="font-family:monospace; font-size:8px; letter-spacing:1px;">{{this}}</div>
+                {{/each}}
+            </div>
+        </div>
+        <div style="margin-top:10px; font-size:10px;">
+            {{spotDiffData.instruction}}
+        </div>
+    </div>
+    {{/if}}
+
     <div class="footer">
         <div>TIME ELAPSED: {{timeElapsed}}</div>
         <div>TEAM: {{teamName}}</div>
