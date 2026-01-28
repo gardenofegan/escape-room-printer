@@ -71,7 +71,6 @@ function playSound(name) {
 
 // Initial Prompt
 initTheme().then(async (themeConfig) => {
-    createInputLine();
     startTimer(); // Initialize timer display
 
     // Play startup sequence
@@ -82,7 +81,35 @@ initTheme().then(async (themeConfig) => {
         }
         await addSeparator();
     }
+
+    // Display game selection menu in console
+    await displayMenu();
+
+    // Create input line AFTER all startup content is displayed
+    createInputLine();
 });
+
+// Display menu lines in console with styled formatting
+async function displayMenu() {
+    try {
+        const menuLines = await window.api.getMenu();
+        for (const line of menuLines) {
+            await typeWriter(line, "menu-line", 5);
+            await new Promise(r => setTimeout(r, 50));
+        }
+        await addSeparator();
+    } catch (err) {
+        console.error("Menu load error:", err);
+    }
+}
+
+// Display multi-line response (for HELP, STATUS, etc.)
+async function displayLines(lines, className = "system-msg") {
+    for (const line of lines) {
+        await typeWriter(line, className, 5);
+        await new Promise(r => setTimeout(r, 30));
+    }
+}
 
 function startTimer() {
     // Clear existing if any
@@ -295,14 +322,26 @@ async function processInput(code, isScan) {
             if (result.isHint && result.penaltyMs) {
                 addHintPenalty(result.penaltyMs);
                 playSound('print'); // Hint prints a receipt
-                await typeWriter(`⚠️ ${result.message}`, "system-msg", 30);
-            } else {
+                await typeWriter(`⚠️ ${result.message}`, "warning-msg", 30);
+            }
+            // Check if this is a HELP or STATUS response (display multi-line)
+            else if (result.isHelp || result.isStatus) {
+                playSound('type');
+                await displayLines(result.lines, "menu-line");
+            }
+            // Check if answers sheet was printed
+            else if (result.isAnswerSheet) {
+                playSound('print');
+                await typeWriter(`📋 ${result.message}`, "system-msg", 30);
+            }
+            // Normal success (puzzle solved or game selection)
+            else {
                 playSound('success');
-                await typeWriter(`ACCESS GRANTED: ${result.message}`, "system-msg", 30);
+                await typeWriter(`✓ ${result.message}`, "success-msg", 30);
                 if (result.nextPuzzleType) {
                     await new Promise(r => setTimeout(r, 500));
                     playSound('print');
-                    await typeWriter(">>> INTIATING HARDCOPY OUTPUT <<<", "system-msg");
+                    await typeWriter(">>> PRINTING NEXT TASK <<<", "system-msg");
                 }
             }
         } else if (result.isTaskScan) {

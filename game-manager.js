@@ -22,38 +22,39 @@ class GameManager {
         this.currentStage = 0;
         this.puzzles = [];
         this.mode = 'CONFIG';
-
-        // Immediate Onboarding: Print Menu
-        await this.startOnboarding();
+        // Menu will be displayed in console by renderer, not printed
     }
 
-    async startOnboarding() {
-        console.log("Printing Onboarding Menu...");
-        // Print the Config Menu
-        // We will repurpose renderReceipt or use printCustom for now.
-        // But a receipt looking menu is better.
-        // Let's create a temporary puzzle object to render a "Menu"
+    // Returns menu text for console display (called by renderer via IPC)
+    getMenuText() {
+        return [
+            "╔═══════════════════════════════╗",
+            "║     SELECT MISSION LENGTH     ║",
+            "╠═══════════════════════════════╣",
+            "║  [5]  SHORT    ~25 min        ║",
+            "║  [10] MEDIUM   ~50 min        ║",
+            "║  [15] LONG     ~75 min        ║",
+            "║  [20] EXPERT   ~100 min       ║",
+            "╚═══════════════════════════════╝",
+            "",
+            "Type a number to begin..."
+        ];
+    }
 
-        const menuText =
-            "SELECT MISSION LENGTH:\n\n" +
-            "  [ 5 ]  SHORT  (~25 MIN)\n" +
-            "  [ 10 ] MEDIUM (~50 MIN)\n" +
-            "  [ 15 ] LONG   (~75 MIN)\n" +
-            "  [ 20 ] EXPERT (~100 MIN)\n\n" +
-            "SCAN OR TYPE NUMBER TO BEGIN";
-
-        const imageBuffer = await receiptRenderer.renderReceipt({
-            missionName: "CONFIGURATION",
-            clueText: menuText,
-            timeElapsed: "00:00",
-            teamName: configManager.get('teamName'),
-            barcodeImage: null // No barcode needed for menu, or maybe a generic one
-        });
-
-        await escapePrinter.printPuzzle({
-            type: 'image',
-            imageBuffer: imageBuffer
-        });
+    // Returns help text for console display
+    getHelpText() {
+        return [
+            "╔═══════════════════════════════╗",
+            "║       AVAILABLE COMMANDS      ║",
+            "╠═══════════════════════════════╣",
+            "║  HINT     - Request a clue    ║",
+            "║            (+1 min penalty)   ║",
+            "║  STATUS   - View progress     ║",
+            "║  HELP     - Show this menu    ║",
+            "║  ANSWERS  - Print answer key  ║",
+            "║            (supervisor only)  ║",
+            "╚═══════════════════════════════╝"
+        ];
     }
 
     async generateRandomGame(count) {
@@ -354,6 +355,37 @@ class GameManager {
         if (normalizedCode === 'ANSWERS' || normalizedCode === 'ANSWERSHEET') {
             return await this.printParentAnswerSheet();
         }
+
+        if (normalizedCode === 'HELP') {
+            return {
+                success: true,
+                isHelp: true,
+                lines: this.getHelpText(),
+                message: "HELP MENU"
+            };
+        }
+
+        if (normalizedCode === 'STATUS') {
+            const puzzle = this.getCurrentPuzzle();
+            const progress = puzzle ? `Puzzle ${this.currentStage + 1} of ${this.totalPuzzles}` : "No active puzzle";
+            const elapsed = this.getElapsedTime(true);
+            const penalties = Math.floor(this.totalHintPenalty / 60000);
+
+            return {
+                success: true,
+                isStatus: true,
+                lines: [
+                    "╔═══════════════════════════════╗",
+                    "║         MISSION STATUS        ║",
+                    "╠═══════════════════════════════╣",
+                    `║  Progress: ${progress.padEnd(18)} ║`,
+                    `║  Time: ${elapsed.padEnd(22)} ║`,
+                    `║  Penalties: +${penalties} min${' '.repeat(14 - String(penalties).length)}║`,
+                    "╚═══════════════════════════════╝"
+                ],
+                message: "STATUS"
+            };
+        }
         // -------------------
 
         const puzzle = this.getCurrentPuzzle();
@@ -582,6 +614,7 @@ class GameManager {
 
         return {
             success: true,
+            isAnswerSheet: true,
             message: "ANSWER SHEET PRINTED."
         };
     }

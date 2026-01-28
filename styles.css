@@ -128,6 +128,26 @@ body::before {
     text-shadow: 0 0 5px var(--terminal-yellow);
 }
 
+/* Menu and styled box display */
+.menu-line {
+    color: #00ffff;
+    text-shadow: 0 0 5px #00ffff;
+    font-family: 'VT323', monospace;
+}
+
+/* Warning messages (hints, penalties) */
+.warning-msg {
+    color: #ff9500;
+    text-shadow: 0 0 5px #ff9500;
+}
+
+/* Success messages (correct answers) */
+.success-msg {
+    color: #00ff88;
+    text-shadow: 0 0 8px #00ff88;
+    font-weight: bold;
+}
+
 /* Cursor & Blinking */
 .cursor {
     display: inline-block;

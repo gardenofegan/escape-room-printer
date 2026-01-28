@@ -622,6 +622,90 @@
     </div>
     {{/if}}
 
+    {{#if wordLadderData}}
+    <div style="margin: 20px 0; padding: 15px; border: 2px solid black; text-align:center;">
+        <div style="font-weight:bold; margin-bottom:15px;">WORD LADDER</div>
+        <div style="font-size:24px; font-weight:bold; letter-spacing:4px; margin:10px 0;">
+            {{wordLadderData.startWord}}
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; margin:15px 0;">
+            <div style="border-left:3px solid black; height:80px; position:relative;">
+                <div style="position:absolute; top:20px; left:10px; font-size:10px;">↓</div>
+                <div style="position:absolute; top:40px; left:10px; font-size:10px;">↓</div>
+                <div style="position:absolute; top:60px; left:10px; font-size:10px;">↓</div>
+            </div>
+        </div>
+        <div style="font-size:24px; font-weight:bold; letter-spacing:4px; margin:10px 0;">
+            {{wordLadderData.endWord}}
+        </div>
+        <div style="margin-top:15px; font-size:12px;">{{wordLadderData.instruction}}</div>
+        <div style="margin-top:10px; font-size:14px; font-style:italic; border-top:1px dashed black; padding-top:10px;">
+            {{wordLadderData.hint}}
+        </div>
+    </div>
+    {{/if}}
+
+    {{#if rebusData}}
+    <div style="margin: 20px 0; padding: 20px; border: 3px solid black; text-align:center;">
+        <div style="font-weight:bold; margin-bottom:15px; font-size:14px;">🧩 REBUS PUZZLE 🧩</div>
+
+        <div
+            style="min-height:80px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:monospace;">
+
+            {{#if rebusData.topText}}
+            {{#if rebusData.bottomText}}
+            <!-- Stacked layout -->
+            <div style="font-size:28px; font-weight:bold; letter-spacing:3px;">{{rebusData.topText}}</div>
+            <div style="width:100px; border-bottom:2px solid black; margin:5px 0;"></div>
+            <div style="font-size:28px; font-weight:bold; letter-spacing:3px;">{{rebusData.bottomText}}</div>
+            {{/if}}
+            {{/if}}
+
+            {{#if rebusData.leftText}}
+            {{#if rebusData.rightText}}
+            <!-- Split layout -->
+            <div style="display:flex; align-items:center; gap:20px;">
+                <div style="font-size:24px; font-weight:bold; position:relative; top:-15px; transform:rotate(-15deg);">
+                    {{rebusData.leftText}}</div>
+                <div style="font-size:24px; font-weight:bold;">{{rebusData.rightText}}</div>
+            </div>
+            {{#if rebusData.subtext}}
+            <div style="font-size:14px; margin-top:5px;">{{rebusData.subtext}}</div>
+            {{/if}}
+            {{/if}}
+            {{/if}}
+
+            {{#if rebusData.bigText}}
+            {{#if rebusData.smallText}}
+            <!-- Big/Small layout -->
+            <div style="font-size:10px;">{{rebusData.smallText}}</div>
+            <div style="font-size:36px; font-weight:bold; letter-spacing:3px;">{{rebusData.bigText}}</div>
+            {{/if}}
+            {{/if}}
+
+            {{#if rebusData.text}}
+            {{#unless rebusData.topText}}
+            {{#unless rebusData.leftText}}
+            {{#unless rebusData.bigText}}
+            <!-- Text only layouts -->
+            <div style="font-size:22px; font-weight:bold; letter-spacing:2px;">{{rebusData.text}}</div>
+            {{#if rebusData.subtext}}
+            <div style="width:80px; border-bottom:2px solid black; margin:5px 0;"></div>
+            <div style="font-size:20px; font-weight:bold;">{{rebusData.subtext}}</div>
+            {{/if}}
+            {{/unless}}
+            {{/unless}}
+            {{/unless}}
+            {{/if}}
+
+        </div>
+
+        <div style="margin-top:20px; font-size:11px; border-top:1px dashed black; padding-top:10px;">
+            {{rebusData.instruction}}
+        </div>
+    </div>
+    {{/if}}
+
     <div class="footer">
         <div>TIME ELAPSED: {{timeElapsed}}</div>
         <div>TEAM: {{teamName}}</div>

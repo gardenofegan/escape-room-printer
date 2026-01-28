@@ -17,7 +17,9 @@ class PuzzleFactory {
             'ANAGRAM': this.generateAnagramPuzzle.bind(this),
             'MINI_SUDOKU': this.generateMiniSudokuPuzzle.bind(this),
             'MICRO_TEXT': this.generateMicroTextPuzzle.bind(this),
-            'SPOT_DIFF': this.generateSpotDiffPuzzle.bind(this)
+            'SPOT_DIFF': this.generateSpotDiffPuzzle.bind(this),
+            'WORD_LADDER': this.generateWordLadderPuzzle.bind(this),
+            'REBUS': this.generateRebusPuzzle.bind(this)
         };
     }
 
@@ -894,6 +896,136 @@ class PuzzleFactory {
                 diffCount: diffCount,
                 answer: answer,
                 instruction: "FIND " + diffCount + " DIFFERENCES. TYPE THE NEW CHARACTERS."
+            }
+        };
+    }
+
+    // ==========================================
+    // WORD LADDER PUZZLE
+    // Change one letter at a time to go from START to END word
+    // ==========================================
+    async generateWordLadderPuzzle(config) {
+        // Pre-defined word ladders (start → end with steps)
+        const ladders = [
+            { start: 'COLD', end: 'WARM', steps: ['CORD', 'WORD', 'WORM'], answer: '4' },
+            { start: 'HEAD', end: 'TAIL', steps: ['HEAL', 'TEAL', 'TELL', 'TALL'], answer: '5' },
+            { start: 'HATE', end: 'LOVE', steps: ['HAVE', 'HOVE', 'HOVE'], answer: '3' },
+            { start: 'LEAD', end: 'GOLD', steps: ['LOAD', 'GOAD'], answer: '3' },
+            { start: 'HIDE', end: 'SEEK', steps: ['SIDE', 'SILK', 'SILL', 'SELL', 'SEAL', 'SEAM'], answer: '7' },
+            { start: 'SLOW', end: 'FAST', steps: ['SLOT', 'SOOT', 'FOOT', 'FORT', 'FORE', 'FARE', 'FARE', 'FART'], answer: '3' },
+            { start: 'FISH', end: 'BIRD', steps: ['FIST', 'GIST', 'GIRD'], answer: '4' },
+            { start: 'LOST', end: 'FIND', steps: ['LOFT', 'LIFT', 'GIFT', 'GIST', 'FIST', 'FINK'], answer: '7' },
+            { start: 'FIRE', end: 'COLD', steps: ['FIRM', 'FORM', 'FORD', 'CORD'], answer: '5' },
+            { start: 'DARK', end: 'MOON', steps: ['DARN', 'DAWN', 'DOWN', 'DOON', 'BOON'], answer: '6' }
+        ];
+
+        const ladder = ladders[Math.floor(Math.random() * ladders.length)];
+
+        return {
+            answer: ladder.answer,
+            wordLadderData: {
+                startWord: ladder.start,
+                endWord: ladder.end,
+                stepCount: ladder.steps.length + 1,
+                instruction: "CHANGE ONE LETTER AT A TIME",
+                hint: "HOW MANY STEPS TO CLIMB?"
+            }
+        };
+    }
+
+    // ==========================================
+    // REBUS PUZZLE
+    // Visual word arrangements that represent common phrases
+    // ==========================================
+    async generateRebusPuzzle(config) {
+        // Rebus puzzles with visual layouts
+        const rebuses = [
+            {
+                layout: 'stacked',
+                topText: 'HEAD',
+                bottomText: 'HEELS',
+                answer: 'HEADOVERHEELS',
+                hint: 'HEAD is literally over HEELS'
+            },
+            {
+                layout: 'split',
+                leftText: 'MAN',
+                rightText: 'BOARD',
+                answer: 'MANOVERBOARD',
+                hint: 'MAN is falling off the BOARD'
+            },
+            {
+                layout: 'repeated',
+                text: 'ROAD ROAD ROAD ROAD',
+                answer: 'CROSSROADS',
+                hint: 'Four roads meeting'
+            },
+            {
+                layout: 'big_small',
+                bigText: 'DEAL',
+                smallText: 'big',
+                answer: 'BIGDEAL',
+                hint: 'One word is bigger'
+            },
+            {
+                layout: 'stacked',
+                topText: 'WEATHER',
+                bottomText: 'FEELING',
+                answer: 'UNDERWEATHER',
+                hint: 'FEELING is under WEATHER'
+            },
+            {
+                layout: 'crossed',
+                text: 'MIND',
+                subtext: 'MATTER',
+                answer: 'MINDOVERMATTER',
+                hint: 'MIND is over MATTER'
+            },
+            {
+                layout: 'repeated',
+                text: 'LOOK LOOK',
+                answer: 'LOOKTWICE',
+                hint: 'Count the LOOKs'
+            },
+            {
+                layout: 'split',
+                leftText: 'ONCE',
+                rightText: 'TIME',
+                subtext: 'a',
+                answer: 'ONCEUPONATIME',
+                hint: 'A is between words'
+            },
+            {
+                layout: 'stacked',
+                topText: 'GROUND',
+                bottomText: 'FEET FEET FEET FEET FEET FEET',
+                answer: 'SIXFEETUNDER',
+                hint: 'Count the feet'
+            },
+            {
+                layout: 'backwards',
+                text: 'SDROW',
+                answer: 'BACKWARDS',
+                hint: 'Read it in reverse'
+            }
+        ];
+
+        const rebus = rebuses[Math.floor(Math.random() * rebuses.length)];
+
+        return {
+            answer: rebus.answer,
+            rebusData: {
+                layout: rebus.layout,
+                topText: rebus.topText || null,
+                bottomText: rebus.bottomText || null,
+                leftText: rebus.leftText || null,
+                rightText: rebus.rightText || null,
+                text: rebus.text || null,
+                subtext: rebus.subtext || null,
+                bigText: rebus.bigText || null,
+                smallText: rebus.smallText || null,
+                hint: rebus.hint,
+                instruction: "READ THE IMAGE - TYPE THE PHRASE"
             }
         };
     }

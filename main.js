@@ -81,6 +81,11 @@ app.whenReady().then(() => {
     return gameManager.getGameStatus();
   });
 
+  // Handle get menu text request (for console display)
+  ipcMain.handle('get-menu', async (event) => {
+    return gameManager.getMenuText();
+  });
+
   // Register a global shortcut to quit the application (Ctrl+Q or Command+Q)
   globalShortcut.register('CommandOrControl+Q', () => {
     app.quit();
