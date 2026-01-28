@@ -205,7 +205,9 @@ class GameManager {
                 anagramData: null,
                 sudokuData: null,
                 microTextData: null,
-                spotDiffData: null
+                spotDiffData: null,
+                wordLadderData: null,
+                rebusData: null
             };
 
             // Store original type before we change it
@@ -283,6 +285,18 @@ class GameManager {
                 renderData.spotDiffData = res.spotDiffData;
                 // Update answer from generator
                 puzzle.answerCode = res.spotDiffData.answer;
+
+            } else if (originalType === 'WORD_LADDER') {
+                const res = await puzzleFactory.generate('WORD_LADDER', {});
+                renderData.wordLadderData = res.wordLadderData;
+                // Update answer from generator
+                puzzle.answerCode = res.answer;
+
+            } else if (originalType === 'REBUS') {
+                const res = await puzzleFactory.generate('REBUS', {});
+                renderData.rebusData = res.rebusData;
+                // Update answer from generator
+                puzzle.answerCode = res.answer;
             }
 
             console.log(`Puzzle ${puzzle.taskId} (${originalType}): Answer = ${puzzle.answerCode}`);

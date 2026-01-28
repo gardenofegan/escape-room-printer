@@ -1,7 +1,7 @@
 {
   "name": "escape-room-receipt-printer",
   "version": "1.0.0",
-  "description": "",
+  "description": "Escape Room Receipt Printer Game",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -11,7 +11,7 @@
   "build": {
     "appId": "com.gardenofegan.escapereceipt",
     "win": {
-      "target": "nsis",
+      "target": "portable",
       "icon": "assets/icon.ico"
     },
     "extraResources": [
