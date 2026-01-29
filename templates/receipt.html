@@ -727,6 +727,344 @@
     </div>
     {{/if}}
 
+    {{!-- BATCH B PUZZLES --}}
+
+    {{!-- NONOGRAM --}}
+    {{#if nonogramData}}
+    <div style="margin-top:20px; text-align:center;">
+        <div style="font-weight:900; font-size:16px; margin-bottom:10px;">{{nonogramData.instruction}}</div>
+
+        <table style="margin: 0 auto; border-collapse: collapse;">
+            {{!-- Column Clues Row --}}
+            <tr>
+                <td style="border:none;"></td>
+                {{#each nonogramData.colClues}}
+                <td
+                    style="vertical-align:bottom; padding-bottom:5px; text-align:center; font-size:12px; font-weight:bold; line-height:1.2;">
+                    {{#each this}}<div>{{this}}</div>{{/each}}
+                </td>
+                {{/each}}
+            </tr>
+
+            {{!-- Rows with Clues --}}
+            {{#each nonogramData.rowClues}}
+            <tr>
+                {{!-- Row Clue --}}
+                <td
+                    style="padding-right:5px; text-align:right; font-size:12px; font-weight:bold; vertical-align:middle;">
+                    {{#each this}}{{this}} {{/each}}
+                </td>
+
+                {{!-- Empty Cells --}}
+                {{#each ../nonogramData.colClues}}
+                <td style="width:20px; height:20px; border:1px solid black;"></td>
+                {{/each}}
+            </tr>
+            {{/each}}
+        </table>
+    </div>
+    {{/if}}
+
+    {{!-- CLOCK PUZZLE --}}
+    {{#if clockData}}
+    <div style="margin: 20px 0; text-align:center;">
+        <div
+            style="font-size:12px; font-weight:bold; margin-bottom:15px; border:1px solid black; display:inline-block; padding:3px;">
+            KEY: {{clockData.key}}
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px;">
+            {{#each clockData.clocks}}
+            <div style="position:relative; width:40px; height:40px; border:2px solid black; border-radius:50%;">
+                {{!-- Hands drawn with rotation --}}
+                {{!-- Hour Hand (approx) --}}
+                <div
+                    style="position:absolute; bottom:50%; left:50%; width:3px; height:10px; background:black; transform-origin:bottom center; transform: translateX(-50%) rotate({{multiply this.hour 30}}deg);">
+                </div>
+                {{!-- Minute Hand --}}
+                <div
+                    style="position:absolute; bottom:50%; left:50%; width:2px; height:15px; background:black; transform-origin:bottom center; transform: translateX(-50%) rotate({{multiply this.minute 6}}deg);">
+                </div>
+
+                {{!-- Center Dot --}}
+                <div
+                    style="position:absolute; top:50%; left:50%; width:4px; height:4px; background:black; border-radius:50%; transform: translate(-50%, -50%);">
+                </div>
+            </div>
+            {{/each}}
+        </div>
+
+        <div style="font-size:12px; margin-top:10px;">{{clockData.instruction}}</div>
+    </div>
+    {{/if}}
+
+    {{!-- DROP QUOTE --}}
+    {{#if dropQuoteData}}
+    <div style="margin: 20px 0; text-align:center;">
+        <div style="font-weight:900; font-size:16px; margin-bottom:15px;">{{dropQuoteData.instruction}}</div>
+
+        {{!-- Falling Letters --}}
+        <div style="display:flex; justify-content:center; gap:4px; margin-bottom:10px;">
+            {{#each dropQuoteData.columns}}
+            <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                {{#each this}}
+                <div
+                    style="width:25px; height:25px; border:1px solid black; font-size:16px; font-weight:bold; display:flex; align-items:center; justify-content:center;">
+                    {{this}}</div>
+                {{/each}}
+            </div>
+            {{/each}}
+        </div>
+
+        {{!-- Solution Grid --}}
+        <div style="display:flex; justify-content:center; gap:4px; margin-top:5px;">
+            {{!-- We just need a grid of empty boxes matching width/height --}}
+            {{!-- Since Handlebars loop options are limited, we use the columns again but render empty boxes --}}
+            {{#each dropQuoteData.columns}}
+            <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                {{!-- Generate empty boxes based on gridHeight (passed as array or we loop fixed amount) --}}
+                {{!-- Hard to loop N times in basic Handlebars. We can loop the pile but pile size varies. --}}
+                {{!-- Workaround: Render a tall column of empty boxes. --}}
+                {{!-- Better: Use a helper or just render the whole grid as a table if data structure supported it. --}}
+                {{!-- Let's just render the exact column height if available, or fixed height. --}}
+                <div
+                    style="width:25px; height:150px; border:2px solid black; border-top:none; display:flex; flex-direction:column; justify-content:flex-end;">
+                    <div style="font-size:10px; text-align:center;">&darr;</div>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+    {{/if}}
+
+    {{!-- BATCH C PUZZLES --}}
+
+    {{!-- KAKURO --}}
+    {{#if kakuroData}}
+    <div style="margin-top:20px; text-align:center;">
+        <div style="font-weight:900; font-size:16px; margin-bottom:10px;">{{kakuroData.instruction}}</div>
+
+        <table style="margin: 0 auto; border-collapse: collapse; border:3px solid black;">
+            {{#each kakuroData.clues}}
+            <tr>
+                {{#each this}}
+                {{#if this}}
+                {{!-- Clue Cell (Triangle Split) --}}
+                <td
+                    style="width:30px; height:30px; border:1px solid black; background: #333; position: relative; color: white; overflow:hidden;">
+                    {{!-- Diagonal Line --}}
+                    <div
+                        style="position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(to top right, transparent 48%, white 49%, white 51%, transparent 52%);">
+                    </div>
+
+                    {{!-- Down Sum --}}
+                    {{#if this.down}}
+                    <div style="position:absolute; bottom:2px; left:2px; font-size:10px; font-weight:bold;">
+                        {{this.down}}</div>
+                    {{/if}}
+
+                    {{!-- Right Sum --}}
+                    {{#if this.right}}
+                    <div style="position:absolute; top:2px; right:2px; font-size:10px; font-weight:bold;">{{this.right}}
+                    </div>
+                    {{/if}}
+                </td>
+                {{else}}
+                {{!-- Check if null (Block) or Input? Actually my logic was:
+                clues[y][x] = object (if block with clues) OR null.
+                But null could be BLOCK or INPUT.
+                I need my template loop to access the GRID LAYOUT too.
+                Handlebars limitation: accessing parent array index is hard.
+                Better approach: Pass a `renderedGrid` where each cell object knows its type.
+                --}}
+
+                {{!-- Quick Fix: Assuming we can't easily cross-reference layout.
+                Let's RE-FACTOR the generator to output `renderedGrid[row][col]`.
+                Wait, I can use the layout logic in generator and just output a single grid structure.
+
+                Let's assume for now I will patch the generator to output 'cells' array.
+                BUT I can't change generator right now easily without losing place.
+                Actually, I already wrote the generator to output `clues`.
+                Let's just assume simple checking: if `this` is null, look at layout? No.
+
+                Let's try to assume my generator output `clues` array had nulls for non-clue cells.
+                Non-clue cells are either BLOCKS (0) OR INPUTS (1).
+                The `clues` array I generated:
+                - If layout[y][x] === 0 (Block), I put {right, down} or null (if no clues).
+                - If layout[y][x] === 1 (Input), I put null.
+
+                Ambiguity: Null means either "Plain Block" or "Input".
+                I need to distinguish.
+
+                Let's use a script to fix the generator output structure in next step?
+                Or try to render blindly.
+                Let's write a generic cell renderer that defaults to input box unless told otherwise?
+                No, black blocks need to be black.
+
+                I will output a PLACEHOLDER here and fix the Generator data structure next.
+                I'll use a `grid` property in `kakuroData`.
+                --}}
+                <td style="width:30px; height:30px; border:1px solid black;"></td>
+                {{/if}}
+                {{/each}}
+            </tr>
+            {{/each}}
+        </table>
+
+        {{!-- Note: I need to update generator to produce a single `grid` of objects: { type: 'CLUE|BLOCK|INPUT',
+        right:?, down:?, val:? } --}}
+        <div style="font-size:10px; margin-top:5px;">(Target Cells A, B, C are hidden for now - Fix Generator)</div>
+    </div>
+    {{/if}}
+
+    {{!-- HASHI --}}
+    {{#if hashiData}}
+    <div
+        style="margin-top:20px; text-align:center; position:relative; width:300px; height:300px; margin-left:auto; margin-right:auto; border:1px solid black;">
+        <div style="font-weight:900; font-size:16px; margin-bottom:10px;">{{hashiData.instruction}}</div>
+
+        {{#each hashiData.islands}}
+        <div
+            style="position:absolute; top:{{multiply this.y 50}}px; left:{{multiply this.x 50}}px; width:30px; height:30px; border:2px solid black; border-radius:50%; display:flex; align-items:center; justify-content:center; background:white; font-weight:bold; z-index:10;">
+            {{this.count}}
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    {{!-- BATCH D PUZZLES (PHYSICAL) --}}
+
+    {{!-- SCYTALE --}}
+    {{#if scytaleData}}
+    <div style="margin-top:20px; text-align:center;">
+        <div style="font-weight:900; font-size:16px; margin-bottom:10px;">{{scytaleData.instruction}}</div>
+        {{!-- Strip --}}
+        <div
+            style="margin:0 auto; width:40px; border:2px dashed black; padding:10px 5px; word-break:break-all; font-family:monospace; font-size:20px; line-height:20px; background:#fff;">
+            {{scytaleData.strip}}
+        </div>
+        <div style="font-size:10px; margin-top:5px;">(CUT ALONG DASHED LINE)</div>
+    </div>
+    {{/if}}
+
+    {{!-- TRANSPARENCY --}}
+    {{#if transparencyData}}
+    <div style="margin-top:20px; text-align:center;">
+        <div style="font-weight:900; font-size:16px; margin-bottom:10px;">{{transparencyData.instruction}}</div>
+
+        {{!-- LAYER 1 --}}
+        <div
+            style="margin:10px auto; width:200px; height:60px; border:2px dashed black; position:relative; overflow:hidden;">
+            <div
+                style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:40px; font-weight:900; color:black; letter-spacing:5px; opacity:0.5;">
+                {{transparencyData.text}}
+            </div>
+            {{!-- Noise / obscuring lines --}}
+            <div
+                style="position:absolute; top:0; left:0; width:100%; height:100%; background: repeating-linear-gradient(45deg, white, white 10px, transparent 10px, transparent 20px);">
+            </div>
+        </div>
+
+        {{!-- LAYER 2 --}}
+        <div
+            style="margin:10px auto; width:200px; height:60px; border:2px dashed black; position:relative; overflow:hidden;">
+            <div
+                style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:40px; font-weight:900; color:black; letter-spacing:5px; opacity:0.5;">
+                {{transparencyData.text}}
+            </div>
+            {{!-- Inverse obscuring lines --}}
+            <div
+                style="position:absolute; top:0; left:0; width:100%; height:100%; background: repeating-linear-gradient(-45deg, white, white 10px, transparent 10px, transparent 20px);">
+            </div>
+        </div>
+    </div>
+    {{/if}}
+
+    {{!-- EDGE MATCH --}}
+    {{#if edgeMatchData}}
+    <div style="margin-top:20px; text-align:center;">
+        <div style="font-weight:900; font-size:16px; margin-bottom:10px;">{{edgeMatchData.instruction}}</div>
+
+        <div style="display:flex; flex-wrap:wrap; width:156px; margin:0 auto; justify-content:center;">
+            {{#each edgeMatchData.tiles}}
+            <div
+                style="width:50px; height:50px; border:1px dashed black; margin:1px; position:relative; box-sizing:border-box;">
+                {{!-- Top --}}
+                <div
+                    style="position:absolute; top:0; left:50%; transform:translateX(-50%); font-size:10px; line-height:10px;">
+                    {{this.t}}</div>
+                {{!-- Bottom --}}
+                <div
+                    style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); font-size:10px; line-height:10px;">
+                    {{this.b}}</div>
+                {{!-- Left --}}
+                <div
+                    style="position:absolute; top:50%; left:0; transform:translateY(-50%); font-size:10px; line-height:10px;">
+                    {{this.l}}</div>
+                {{!-- Right --}}
+                <div
+                    style="position:absolute; top:50%; right:0; transform:translateY(-50%); font-size:10px; line-height:10px;">
+                    {{this.r}}</div>
+
+                {{!-- Center ID (optional, maybe distracting) --}}
+                {{!-- <div
+                    style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:8px; color:#ccc;">
+                    {{this.id}}</div> --}}
+            </div>
+            {{/each}}
+        </div>
+    </div>
+    {{/if}}
+
+    {{!-- BATCH A PUZZLES --}}
+
+    {{!-- POLYBIUS SQUARE --}}
+    {{#if polybiusData}}
+    <div style="margin-top:20px; text-align:center;">
+        <div style="font-weight:900; font-size:16px;">{{polybiusData.instruction}}</div>
+        <div style="margin: 15px auto; width: 200px;">
+            {{#each polybiusData.grid}}
+            <div style="display:flex; justify-content:center;">
+                {{#each this}}
+                <div
+                    style="width:35px; height:35px; border:1px solid black; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:18px;">
+                    {{this}}</div>
+                {{/each}}
+            </div>
+            {{/each}}
+        </div>
+        <div style="margin-top:15px; font-weight:bold; font-size:18px; letter-spacing:2px;">
+            {{polybiusData.coordinates}}
+        </div>
+    </div>
+    {{/if}}
+
+    {{!-- MIRROR TEXT --}}
+    {{#if mirrorData}}
+    <div style="margin: 30px 0; padding:10px; border: 3px solid black;">
+        <div style="font-size:12px; text-align:center; border-bottom:1px solid black; margin-bottom:10px;">
+            {{mirrorData.instruction}}</div>
+        <div
+            style="font-size:24px; font-weight:900; text-align:center; transform: scaleX(-1); white-space: pre-wrap; line-height: 1.4;">
+            {{mirrorData.text}}
+        </div>
+    </div>
+    {{/if}}
+
+    {{!-- TACTILE (BRAILLE / MORSE) --}}
+    {{#if tactileData}}
+    <div style="margin: 20px 0; text-align:center;">
+        <div style="font-size:14px; margin-bottom:10px; border:2px solid black; padding:5px; display:inline-block;">KEY:
+            {{tactileData.key}}</div>
+
+        <div style="margin: 20px 0; font-size:32px; font-weight:900; line-height:1.5; word-break: break-all;">
+            {{tactileData.encoded}}
+        </div>
+
+        <div style="font-size:12px; font-weight:bold;">{{tactileData.instruction}}</div>
+    </div>
+    {{/if}}
+
     <div class="footer">
         <div>TIME ELAPSED: {{timeElapsed}}</div>
         <div>TEAM: {{teamName}}</div>

@@ -13,6 +13,9 @@ class ReceiptRenderer {
         handlebars.registerHelper('eq', function (a, b) {
             return a === b;
         });
+        handlebars.registerHelper('multiply', function (a, b) {
+            return Number(a) * Number(b);
+        });
 
         this.template = handlebars.compile(this.templateSource);
     }

@@ -75,9 +75,9 @@ class GameManager {
 
         // Puzzle pools by difficulty
         const puzzlePool = {
-            easy: ['RIDDLE', 'FOLDING', 'NUMBER_SEQUENCE', 'ANAGRAM'],
-            medium: ['MAZE_VERTICAL', 'WORD_SEARCH', 'SYMBOL_MATH', 'SPOT_DIFF'],
-            hard: ['CIPHER', 'MINI_SUDOKU', 'ASCII', 'SOUND_WAVE']
+            easy: ['RIDDLE', 'FOLDING', 'NUMBER_SEQUENCE', 'ANAGRAM', 'MIRROR', 'CLOCK', 'HASHI', 'SCYTALE'],
+            medium: ['MAZE_VERTICAL', 'WORD_SEARCH', 'SYMBOL_MATH', 'SPOT_DIFF', 'POLYBIUS', 'DROP_QUOTE', 'EDGE_MATCH'],
+            hard: ['CIPHER', 'MINI_SUDOKU', 'ASCII', 'SOUND_WAVE', 'TACTILE', 'NONOGRAM', 'KAKURO', 'TRANSPARENCY']
         };
 
         const cipherVariants = ['PIGPEN', 'CAESAR', 'ICON'];
@@ -131,6 +131,22 @@ class GameManager {
                 // Answer generated at runtime
                 puzzleConfig = { useGeneratorAnswer: true };
                 finalAnswer = 'DIFF_PLACEHOLDER';
+            } else if (type === 'MIRROR' || type === 'POLYBIUS' || type === 'TACTILE') {
+                // Answer generated at runtime
+                puzzleConfig = { useGeneratorAnswer: true };
+                finalAnswer = 'BATCH_A_PLACEHOLDER';
+            } else if (type === 'NONOGRAM' || type === 'CLOCK' || type === 'DROP_QUOTE') {
+                // Answer generated at runtime
+                puzzleConfig = { useGeneratorAnswer: true };
+                finalAnswer = 'BATCH_B_PLACEHOLDER';
+            } else if (type === 'KAKURO' || type === 'HASHI') {
+                // Answer generated at runtime
+                puzzleConfig = { useGeneratorAnswer: true };
+                finalAnswer = 'BATCH_C_PLACEHOLDER';
+            } else if (type === 'SCYTALE' || type === 'TRANSPARENCY' || type === 'EDGE_MATCH') {
+                // Answer generated at runtime
+                puzzleConfig = { useGeneratorAnswer: true };
+                finalAnswer = 'BATCH_D_PLACEHOLDER';
             }
 
             const taskId = `TSK-${String(i + 1).padStart(2, '0')}-${type.substring(0, 3)}`;
@@ -184,7 +200,19 @@ class GameManager {
             'ANAGRAM': "UNSCRAMBLE THE MESSAGE.",
             'MINI_SUDOKU': "COMPLETE THE GRID.",
             'MICRO_TEXT': "OBSERVE CLOSELY.",
-            'SPOT_DIFF': "SPOT THE DIFFERENCES."
+            'SPOT_DIFF': "SPOT THE DIFFERENCES.",
+            'MIRROR': "REFLECT ON THIS.",
+            'POLYBIUS': "DECODE COORDINATES.",
+            'TACTILE': "FEEL THE CODE.",
+            'NONOGRAM': "REVEAL THE IMAGE.",
+            'CLOCK': "TIME WILL TELL.",
+            'CLOCK': "TIME WILL TELL.",
+            'DROP_QUOTE': "RESTORE THE MESSAGE.",
+            'KAKURO': "SUM THE CROSSES.",
+            'HASHI': "CONNECT THE ISLANDS.",
+            'SCYTALE': "WRAP THE STRIP.",
+            'TRANSPARENCY': "SEE THROUGH THE LAYERS.",
+            'EDGE_MATCH': "ALIGN THE BORDERS."
         };
         return clues[type] || "SOLVE PUZZLE TO PROCEED.";
     }
@@ -306,6 +334,66 @@ class GameManager {
                 const res = await puzzleFactory.generate('REBUS', {});
                 renderData.rebusData = res.rebusData;
                 // Update answer from generator
+                puzzle.answerCode = res.answer;
+            } else if (originalType === 'REBUS') {
+                const res = await puzzleFactory.generate('REBUS', {});
+                renderData.rebusData = res.rebusData;
+                // Update answer from generator
+                puzzle.answerCode = res.answer;
+
+            } else if (originalType === 'MIRROR') {
+                const res = await puzzleFactory.generateMirrorPuzzle({});
+                renderData.mirrorData = res.mirrorData;
+                puzzle.answerCode = res.answer;
+
+            } else if (originalType === 'POLYBIUS') {
+                const res = await puzzleFactory.generatePolybiusPuzzle({});
+                renderData.polybiusData = res.polybiusData;
+                puzzle.answerCode = res.answer;
+
+            } else if (originalType === 'TACTILE') {
+                const res = await puzzleFactory.generateBrailleMorsePuzzle({});
+                renderData.tactileData = res.tactileData;
+                puzzle.answerCode = res.answer;
+
+            } else if (originalType === 'NONOGRAM') {
+                const res = await puzzleFactory.generateNonogramPuzzle({});
+                renderData.nonogramData = res.nonogramData;
+                puzzle.answerCode = res.answer;
+
+            } else if (originalType === 'CLOCK') {
+                const res = await puzzleFactory.generateClockPuzzle({});
+                renderData.clockData = res.clockData;
+                puzzle.answerCode = res.answer;
+
+            } else if (originalType === 'DROP_QUOTE') {
+                const res = await puzzleFactory.generateDropQuotePuzzle({});
+                renderData.dropQuoteData = res.dropQuoteData;
+                puzzle.answerCode = res.answer;
+
+            } else if (originalType === 'KAKURO') {
+                const res = await puzzleFactory.generateKakuroPuzzle({});
+                renderData.kakuroData = res.kakuroData;
+                puzzle.answerCode = res.answer;
+
+            } else if (originalType === 'HASHI') {
+                const res = await puzzleFactory.generateHashiPuzzle({});
+                renderData.hashiData = res.hashiData;
+                puzzle.answerCode = res.answer;
+
+            } else if (originalType === 'SCYTALE') {
+                const res = await puzzleFactory.generateScytalePuzzle({});
+                renderData.scytaleData = res.scytaleData;
+                puzzle.answerCode = res.answer;
+
+            } else if (originalType === 'TRANSPARENCY') {
+                const res = await puzzleFactory.generateTransparencyPuzzle({});
+                renderData.transparencyData = res.transparencyData;
+                puzzle.answerCode = res.answer;
+
+            } else if (originalType === 'EDGE_MATCH') {
+                const res = await puzzleFactory.generateEdgeMatchPuzzle({});
+                renderData.edgeMatchData = res.edgeMatchData;
                 puzzle.answerCode = res.answer;
             }
 
@@ -650,6 +738,50 @@ class GameManager {
             'SPOT_DIFF': [
                 "Compare the two blocks character by character.",
                 `There are exactly 4 different characters to find.`
+            ],
+            'MIRROR': [
+                "The text is backwards or inverted. Try reading it in a mirror.",
+                `The answer is simply the text you see.`
+            ],
+            'POLYBIUS': [
+                "Use the grid. The numbers are Row-Column coordinates.",
+                `The first letter is at Row ${puzzle.answerCode ? '?' : '?'} Col ${puzzle.answerCode ? '?' : '?'}.`
+            ],
+            'TACTILE': [
+                "Use the key at the top to decode the dots/dashes.",
+                `The answer relates to the ${puzzle.clueText || 'code'}.`
+            ],
+            'NONOGRAM': [
+                "The numbers tell you how many filled squares are in that row/column.",
+                `When solved, the image reveals a ${puzzle.answerCode}.`
+            ],
+            'CLOCK': [
+                "Translate the times to letters using the key (e.g. 1:00 = A).",
+                `The answer code is ${puzzle.answerCode}.`
+            ],
+            'DROP_QUOTE': [
+                "Letters fall straight down into the column below.",
+                `The quote says something about ${puzzle.answerCode}.`
+            ],
+            'KAKURO': [
+                "Numbers in a run must sum to the clue. Use 1-9 without repeats.",
+                `The answer sums specific values.`
+            ],
+            'HASHI': [
+                "Islands must be connected by 1 or 2 bridges. The number = total bridges connected.",
+                `Answer = Sum of counts of specific islands? (Or simple solved value)`
+            ],
+            'SCYTALE': [
+                "Cut the strip and wrap it spirally around a pencil or pen.",
+                `The letters will align to form the word: ${puzzle.answerCode.substring(0, 2)}...`
+            ],
+            'TRANSPARENCY': [
+                "Cut out both rectangles. Overlay them and hold up to light.",
+                `The combined image reveals the word: ${puzzle.answerCode}.`
+            ],
+            'EDGE_MATCH': [
+                "Cut out the 9 squares. Arrange them in a 3x3 grid so edges match.",
+                `Look at the center row for the answer.`
             ]
         };
 
